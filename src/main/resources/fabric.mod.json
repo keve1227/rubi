@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "id": "furigana",
+    "version": "${version}",
+    "name": "Furigana",
+    "description": "Enables the display of furigana/ruby annotations in Minecraft.",
+    "contact": {
+        "homepage": "https://furigana.kevinsundqvistnorlen.com/",
+        "sources": "https://github.com/keve1227/furigana",
+        "issues": "https://github.com/keve1227/furigana/issues"
+    },
+    "authors": ["keve1227"],
+    "license": "GPL3",
+    "icon": "assets/furigana/icon.png",
+    "environment": "client",
+    "mixins": ["furigana.mixins.json"],
+    "depends": {
+        "fabricloader": ">=0.14.22",
+        "minecraft": "~1.20.1",
+        "java": ">=17"
+    }
+}

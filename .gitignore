@@ -1,0 +1,44 @@
+# gradle
+
+/.gradle
+/build
+/out
+/classes
+
+# eclipse
+
+*.launch
+
+# idea
+
+/.idea
+*.iml
+*.ipr
+*.iws
+
+# vscode
+
+/.vscode
+/bin
+.prettierrc
+
+# macos
+
+*.DS_Store
+
+# fabric
+
+/run
+
+# java
+
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
+
+# node
+
+/node_modules
+package.json
+pnpm-lock.yaml
