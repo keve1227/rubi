@@ -1,5 +1,6 @@
 package com.kevinsundqvistnorlen.furigana;
 
+import com.google.common.collect.ImmutableList;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -10,7 +11,7 @@ import net.minecraft.text.Style;
 public class FuriganaText implements OrderedText {
 
     private static final Pattern FURIGANA_PATTERN = Pattern.compile("\\s?(\\p{L}+)\\{([^}]+)}");
-    private static final HashMap<UniqueOrderedText, List<FuriganaText>> CACHE = new HashMap<>();
+    private static final HashMap<UniqueOrderedText, FuriganaParseResult> CACHE = new HashMap<>();
 
     private final OrderedText text;
     private final OrderedText furigana;
@@ -20,12 +21,12 @@ public class FuriganaText implements OrderedText {
         this.furigana = furigana;
     }
 
-    public OrderedText getText() {
-        return text;
-    }
-
     public OrderedText getFurigana() {
         return furigana;
+    }
+
+    public boolean hasFurigana() {
+        return furigana != null;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class FuriganaText implements OrderedText {
         return OrderedText.innerConcat(result);
     }
 
-    public static List<FuriganaText> parseCached(OrderedText text) {
+    public static FuriganaParseResult parseCached(OrderedText text) {
         try {
             return CACHE.computeIfAbsent(new UniqueOrderedText(text), FuriganaText::parse);
         } finally {
@@ -50,7 +51,7 @@ public class FuriganaText implements OrderedText {
         }
     }
 
-    public static List<FuriganaText> parse(OrderedText text) {
+    public static FuriganaParseResult parse(OrderedText text) {
         List<FuriganaText> result = new ArrayList<>();
 
         StringBuilder builder = new StringBuilder();
@@ -80,7 +81,7 @@ public class FuriganaText implements OrderedText {
         }
 
         if (result.isEmpty()) {
-            return List.of(new FuriganaText(text, null));
+            return new FuriganaParseResult(ImmutableList.of(new FuriganaText(text, null)));
         }
 
         if (last < builder.length()) {
@@ -88,29 +89,20 @@ public class FuriganaText implements OrderedText {
             result.add(new FuriganaText(tail, null));
         }
 
-        return result;
+        return new FuriganaParseResult(ImmutableList.copyOf(result));
     }
 
     public static OrderedText strip(OrderedText text) {
-        return Utils.orderedFrom(FuriganaText.parseCached(text));
+        return Utils.orderedFrom(FuriganaText.parseCached(text).texts());
+    }
+
+    public record FuriganaParseResult(ImmutableList<FuriganaText> texts) {
+        public boolean hasFurigana() {
+            return this.texts.stream().anyMatch(FuriganaText::hasFurigana);
+        }
     }
 
     private record UniqueOrderedText(OrderedText text) implements OrderedText {
-        @Override
-        public boolean accept(CharacterVisitor visitor) {
-            return text.accept(visitor);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof UniqueOrderedText) {
-                var other = (UniqueOrderedText) obj;
-                return other.longHashCode() == this.longHashCode();
-            }
-
-            return false;
-        }
-
         public long longHashCode() {
             var hash = new AtomicLong(-3750763034362895579L);
 
@@ -125,6 +117,21 @@ public class FuriganaText implements OrderedText {
                 });
 
             return hash.getPlain();
+        }
+
+        @Override
+        public boolean accept(CharacterVisitor visitor) {
+            return text.accept(visitor);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof UniqueOrderedText) {
+                var other = (UniqueOrderedText) obj;
+                return other.longHashCode() == this.longHashCode();
+            }
+
+            return false;
         }
 
         @Override
