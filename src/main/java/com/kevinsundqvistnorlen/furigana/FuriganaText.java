@@ -1,17 +1,18 @@
 package com.kevinsundqvistnorlen.furigana;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.text.*;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Style;
 
 public class FuriganaText implements OrderedText {
 
     private static final Pattern FURIGANA_PATTERN = Pattern.compile("\\s?(\\p{L}+)\\{([^}]+)}");
+
     private static final HashMap<UniqueOrderedText, FuriganaParseResult> CACHE = new HashMap<>();
+    private static final int CACHE_MAX_SIZE = 1_000_000;
 
     private final OrderedText text;
     private final OrderedText furigana;
@@ -19,19 +20,6 @@ public class FuriganaText implements OrderedText {
     public FuriganaText(OrderedText text, OrderedText furigana) {
         this.text = text;
         this.furigana = furigana;
-    }
-
-    public OrderedText getFurigana() {
-        return furigana;
-    }
-
-    public boolean hasFurigana() {
-        return furigana != null;
-    }
-
-    @Override
-    public boolean accept(CharacterVisitor visitor) {
-        return text.accept(visitor);
     }
 
     private static OrderedText styledChars(CharSequence chars, Collection<Style> styles) {
@@ -45,7 +33,7 @@ public class FuriganaText implements OrderedText {
         try {
             return CACHE.computeIfAbsent(new UniqueOrderedText(text), FuriganaText::parse);
         } finally {
-            while (CACHE.size() >= 1_000_000) {
+            while (CACHE.size() >= CACHE_MAX_SIZE) {
                 CACHE.remove(CACHE.keySet().stream().findAny().get());
             }
         }
@@ -85,7 +73,10 @@ public class FuriganaText implements OrderedText {
         }
 
         if (last < builder.length()) {
-            var tail = FuriganaText.styledChars(builder.subSequence(last, builder.length()), styles.subList(last, builder.length()));
+            var tail = FuriganaText.styledChars(
+                builder.subSequence(last, builder.length()),
+                styles.subList(last, builder.length())
+            );
             result.add(new FuriganaText(tail, null));
         }
 
@@ -96,6 +87,19 @@ public class FuriganaText implements OrderedText {
         return Utils.orderedFrom(FuriganaText.parseCached(text).texts());
     }
 
+    public OrderedText getFurigana() {
+        return this.furigana;
+    }
+
+    public boolean hasFurigana() {
+        return this.furigana != null;
+    }
+
+    @Override
+    public boolean accept(CharacterVisitor visitor) {
+        return this.text.accept(visitor);
+    }
+
     public record FuriganaParseResult(ImmutableList<FuriganaText> texts) {
         public boolean hasFurigana() {
             return this.texts.stream().anyMatch(FuriganaText::hasFurigana);
@@ -103,31 +107,33 @@ public class FuriganaText implements OrderedText {
     }
 
     private record UniqueOrderedText(OrderedText text) implements OrderedText {
+        private static final long FNV_OFFSET_BASIS = -3750763034362895579L;
+        private static final long FNV_PRIME = 1099511628211L;
+
         public long longHashCode() {
-            var hash = new AtomicLong(-3750763034362895579L);
+            var hash = new AtomicLong(UniqueOrderedText.FNV_OFFSET_BASIS);
 
             this.accept((index, style, codePoint) -> {
-                    long h = hash.getPlain();
-                    h *= 1099511628211L;
-                    h ^= codePoint;
-                    h *= 1099511628211L;
-                    h ^= style.hashCode();
-                    hash.setPlain(h);
-                    return true;
-                });
+                long h = hash.getPlain();
+                h *= UniqueOrderedText.FNV_PRIME;
+                h ^= codePoint;
+                h *= UniqueOrderedText.FNV_PRIME;
+                h ^= style.hashCode();
+                hash.setPlain(h);
+                return true;
+            });
 
             return hash.getPlain();
         }
 
         @Override
         public boolean accept(CharacterVisitor visitor) {
-            return text.accept(visitor);
+            return this.text.accept(visitor);
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof UniqueOrderedText) {
-                var other = (UniqueOrderedText) obj;
+            if (obj instanceof UniqueOrderedText other) {
                 return other.longHashCode() == this.longHashCode();
             }
 
