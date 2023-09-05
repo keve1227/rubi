@@ -46,3 +46,7 @@ pnpm-lock.yaml
 # resource packs
 
 !/run/resourcepacks
+
+# other
+
+*.zip
