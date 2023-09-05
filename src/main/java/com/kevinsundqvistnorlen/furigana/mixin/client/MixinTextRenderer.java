@@ -115,9 +115,18 @@ public abstract class MixinTextRenderer {
                     matrix,
                     this.handler,
                     this.fontHeight,
-                    (t, xx, yy, m) -> {
-                        this.draw(t, xx, yy, color, shadow, m, vertexConsumers, layerType, backgroundColor, light);
-                    }
+                    (t, xx, yy, m) -> this.draw(
+                        t,
+                        xx,
+                        yy,
+                        color,
+                        shadow,
+                        m,
+                        vertexConsumers,
+                        layerType,
+                        backgroundColor,
+                        light
+                    )
                 )
             );
         }
@@ -145,9 +154,7 @@ public abstract class MixinTextRenderer {
                 matrix,
                 this.handler,
                 this.fontHeight,
-                (t, xx, yy, m) -> {
-                    this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light);
-                }
+                (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
 
             info.cancel();

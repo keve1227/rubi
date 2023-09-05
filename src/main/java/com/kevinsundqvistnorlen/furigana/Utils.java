@@ -20,9 +20,7 @@ public final class Utils {
     }
 
     public static OrderedText orderedFrom(StringVisitable text) {
-        return visitor -> {
-            return TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
-        };
+        return visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
     }
 
     public static OrderedText orderedFrom(List<? extends OrderedText> texts) {
@@ -32,11 +30,9 @@ public final class Utils {
     public static OrderedText style(OrderedText text, UnaryOperator<Style> stylizer) {
         if (text == null) return null;
 
-        return visitor -> {
-            return text.accept((index, style, codePoint) -> {
-                return visitor.accept(index, stylizer.apply(style), codePoint);
-            });
-        };
+        return visitor -> text.accept((index, style, codePoint) -> {
+            return visitor.accept(index, stylizer.apply(style), codePoint);
+        });
     }
 
     public static int drawFuriganaTexts(
