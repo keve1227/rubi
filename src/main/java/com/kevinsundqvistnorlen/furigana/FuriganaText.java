@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class FuriganaText implements OrderedText {
 
-    private static final Pattern FURIGANA_PATTERN = Pattern.compile("\\s?(\\p{L}+)\\{([^}]+)}");
+    private static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0?(\\p{L}+)\ue9c1([^\ue9c2]+)\ue9c2");
 
     private static final HashMap<UniqueOrderedText, FuriganaParseResult> CACHE = new HashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;

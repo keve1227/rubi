@@ -30,11 +30,11 @@ public abstract class MixinLineBreakingVisitor {
     @Inject(method = "accept", at = @At("HEAD"), cancellable = true)
     public void injectAccept(int index, Style style, int codePoint, CallbackInfoReturnable<? super Boolean> info) {
         boolean discard = switch (codePoint) {
-            case '{' -> {
+            case '\ue9c1' -> {
                 this.furigana = true;
                 yield true;
             }
-            case '}' -> {
+            case '\ue9c2' -> {
                 this.furigana = false;
                 this.lastSpaceBreak = this.startOffset + index + 1;
                 this.lastSpaceStyle = style;
