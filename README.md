@@ -8,6 +8,8 @@ them), so I expect there to be some inaccuracies.
 
 _Requires [Fabric Loader](https://fabricmc.net/)._
 
+**NOTE: This mod does basically nothing without a compatible language resource pack.**
+
 ## Implementation Details
 
 The furigana annotations are formatted according to the following pattern:
@@ -17,7 +19,8 @@ The furigana annotations are formatted according to the following pattern:
 ```
 
 The delimiters are represented by a random selection within one of the private use areas of Unicode, specifically
-U+E9C0, U+E9C1, and U+E9C2. I did this to minimize the risk of unintended text being rendered as ruby annotations.
+`U+E9C0`, `U+E9C1`, and `U+E9C2`. I did this to minimize the risk of any texts that aren't supposed to be ruby
+annotations being rendered as such.
 
-When U+E9C0 is omitted, the text will match the longest contiguous string of Unicode-defined letters that precedes
-U+E9C1.
+When `U+E9C0` is omitted, the text will match the longest contiguous string of Unicode-defined letters that precedes
+`U+E9C1`.
