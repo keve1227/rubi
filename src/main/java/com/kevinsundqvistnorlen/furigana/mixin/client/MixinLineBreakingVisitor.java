@@ -36,6 +36,8 @@ public abstract class MixinLineBreakingVisitor {
             }
             case '}' -> {
                 this.furigana = false;
+                this.lastSpaceBreak = this.startOffset + index + 1;
+                this.lastSpaceStyle = style;
                 yield true;
             }
             default -> false;
