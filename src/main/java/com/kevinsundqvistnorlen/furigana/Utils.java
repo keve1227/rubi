@@ -70,7 +70,7 @@ public final class Utils {
                     text,
                     advance,
                     y,
-                    new Matrix4f(matrix).scaleAround(1, 0.8f, 1, advance + textWidth / 2, y + fontHeight, 0)
+                    new Matrix4f(matrix).scaleAround(1, 0.8f, 1, advance + textWidth / 2, y + fontHeight * 0.8f, 0)
                 );
             } else {
                 drawer.draw(text, advance, y, matrix);
