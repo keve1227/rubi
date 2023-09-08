@@ -4,7 +4,7 @@ import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.regex.Pattern;
 

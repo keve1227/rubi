@@ -23,8 +23,16 @@ public abstract class MixinTextHandler {
         info.setReturnValue(this.getWidth(Utils.orderedFrom(text)));
     }
 
-    @ModifyVariable(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), argsOnly = true)
-    public OrderedText modifyGetWidthText(OrderedText text) {
-        return FuriganaText.strip(text);
+    @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
+    public void injectGetWidth(OrderedText text, CallbackInfoReturnable<Float> info) {
+        var parsed = FuriganaText.parseCached(text);
+        if (!parsed.hasFurigana()) return;
+
+        float width = 0;
+        for (final var part : parsed.texts()) {
+            width += part.getWidth((TextHandler) (Object) this);
+        }
+
+        info.setReturnValue(width);
     }
 }

@@ -1,9 +1,6 @@
 package com.kevinsundqvistnorlen.furigana;
 
-import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
-import org.joml.Math;
-import org.joml.*;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -35,55 +32,13 @@ public final class Utils {
         });
     }
 
-    public static int drawFuriganaTexts(
-        List<FuriganaText> texts,
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextHandler handler,
-        int fontHeight,
-        Drawer drawer
-    ) {
-        float advance = x;
+    public static CharSequence charsFrom(OrderedText text) {
+        StringBuilder builder = new StringBuilder();
+        text.accept((index, style, codePoint) -> {
+            builder.appendCodePoint(codePoint);
+            return true;
+        });
 
-        for (final var text : texts) {
-            float textWidth = handler.getWidth(text);
-            var furigana = Utils.style(text.getFurigana(), style -> style.withBold(true));
-
-            if (furigana != null) {
-                final float heightScale = 0.5f;
-
-                float furiganaWidth = handler.getWidth(furigana);
-                float scale = Math.min(heightScale, textWidth / furiganaWidth);
-
-                float lineHeight = fontHeight * heightScale;
-                float xx = advance + (textWidth - furiganaWidth * scale) / 2;
-                float yy = y - lineHeight;
-
-                drawer.draw(
-                    furigana,
-                    xx,
-                    yy,
-                    new Matrix4f(matrix).scaleAround(scale, heightScale, 1, xx, yy + lineHeight, 0)
-                );
-                drawer.draw(
-                    text,
-                    advance,
-                    y,
-                    new Matrix4f(matrix).scaleAround(1, 0.8f, 1, advance + textWidth / 2, y + fontHeight * 0.8f, 0)
-                );
-            } else {
-                drawer.draw(text, advance, y, matrix);
-            }
-
-            advance += textWidth;
-        }
-
-        return (int) Math.floor(advance);
-    }
-
-    @FunctionalInterface
-    public interface Drawer {
-        void draw(OrderedText text, float x, float y, Matrix4f matrix);
+        return builder;
     }
 }

@@ -4,6 +4,7 @@ import com.kevinsundqvistnorlen.furigana.*;
 import net.minecraft.client.font.*;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
+import org.joml.Math;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
@@ -56,7 +57,7 @@ public abstract class MixinTextRenderer {
                      "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
         )
     )
-    public int redirectDrawString(
+    public int redirectDraw(
         TextRenderer textRenderer,
         String text,
         float x,
@@ -104,31 +105,30 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfoReturnable<Integer> info
     ) {
-        FuriganaText.FuriganaParseResult parsed = FuriganaText.parseCached(text);
+        var parsed = FuriganaText.parseCached(text);
 
         if (parsed.hasFurigana()) {
-            info.setReturnValue(
-                Utils.drawFuriganaTexts(
-                    parsed.texts(),
-                    x,
-                    y,
-                    matrix,
-                    this.handler,
-                    this.fontHeight,
-                    (t, xx, yy, m) -> this.draw(
-                        t,
-                        xx,
-                        yy,
-                        color,
-                        shadow,
-                        m,
-                        vertexConsumers,
-                        layerType,
-                        backgroundColor,
-                        light
-                    )
+            float advance = parsed.draw(
+                x,
+                y,
+                matrix,
+                this.handler,
+                this.fontHeight,
+                (t, xx, yy, m) -> this.draw(
+                    t,
+                    xx,
+                    yy,
+                    color,
+                    shadow,
+                    m,
+                    vertexConsumers,
+                    layerType,
+                    backgroundColor,
+                    light
                 )
             );
+
+            info.setReturnValue((int) Math.floor(advance));
         }
     }
 
@@ -144,11 +144,10 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfo info
     ) {
-        FuriganaText.FuriganaParseResult parsed = FuriganaText.parseCached(text);
+        var parsed = FuriganaText.parseCached(text);
 
         if (parsed.hasFurigana()) {
-            Utils.drawFuriganaTexts(
-                parsed.texts(),
+            parsed.draw(
                 x,
                 y,
                 matrix,
