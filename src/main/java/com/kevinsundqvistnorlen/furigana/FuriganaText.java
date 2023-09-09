@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public record FuriganaText(OrderedText text, OrderedText furigana) implements OrderedText {
 
-    public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0(\\p{L}+)\ue9c1([^\ue9c2]+)\ue9c2");
+    public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0([^\ue9c1]+)\ue9c1([^\ue9c2]+)\ue9c2");
 
     public static final float FURIGANA_SCALE = 0.5f;
     public static final float FURIGANA_OVERLAP = 0.1f;
