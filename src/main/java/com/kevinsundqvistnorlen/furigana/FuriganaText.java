@@ -109,13 +109,13 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         TextDrawer drawer
     ) {
         return switch (FuriganaMode.getValue()) {
-            case ABOVE -> this.drawAbove(x, y, matrix, handler, fontHeight, drawer);
+            case NORMAL, INVERSE -> this.drawNormal(x, y, matrix, handler, fontHeight, drawer);
             case REPLACE -> this.drawReplace(x, y, matrix, handler, drawer);
             case HIDDEN -> this.drawHidden(x, y, matrix, handler, drawer);
         };
     }
 
-    public float drawAbove(
+    public float drawNormal(
         float x,
         float y,
         Matrix4f matrix,
@@ -123,62 +123,67 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         int fontHeight,
         TextDrawer drawer
     ) {
+        final FuriganaMode mode = FuriganaMode.getValue();
+
         final float width = handler.getWidth(this);
         final float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
-        final float furiganaHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
+        final float overHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
 
-        final float yText = y + (fontHeight - textHeight);
-        final float yFurigana = yText - furiganaHeight + fontHeight * FuriganaText.FURIGANA_OVERLAP;
+        final float yMain = y + (fontHeight - textHeight);
+        final float yOver = yMain - overHeight + fontHeight * FuriganaText.FURIGANA_OVERLAP;
 
         MutableFloat xx = new MutableFloat();
 
-        var furigana = Utils.styleOrdered(this.furigana(), style -> style.withUnderline(false).withBold(true));
-        float furiganaWidth = handler.getWidth(furigana) * FuriganaText.FURIGANA_SCALE;
-        float furiganaGap = (width - furiganaWidth) / Utils.charsFromOrdered(furigana).length();
+        var over = Utils.styleOrdered(
+            mode != FuriganaMode.INVERSE ? this.furigana() : this.text(),
+            style -> style.withUnderline(false).withBold(true)
+        );
 
-        xx.setValue(x + furiganaGap / 2);
+        float overWidth = handler.getWidth(over) * FuriganaText.FURIGANA_SCALE;
+        float overGap = (width - overWidth) / Utils.charsFromOrdered(over).length();
+        xx.setValue(x + overGap / 2);
 
-        furigana.accept((index, style, codePoint) -> {
+        over.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
 
             drawer.draw(
                 styled,
                 xx.floatValue(),
-                yFurigana,
+                yOver,
                 new Matrix4f(matrix).scaleAround(
                     FuriganaText.FURIGANA_SCALE,
                     xx.floatValue(),
-                    yFurigana,
+                    yOver,
                     0
                 )
             );
 
-            xx.add(handler.getWidth(styled) * FuriganaText.FURIGANA_SCALE + furiganaGap);
+            xx.add(handler.getWidth(styled) * FuriganaText.FURIGANA_SCALE + overGap);
             return true;
         });
 
-        var text = this.text();
-        float textWidth = handler.getWidth(text) * FuriganaText.TEXT_SCALE;
-        float textGap = (width - textWidth) / Utils.charsFromOrdered(text).length();
+        var main = mode != FuriganaMode.INVERSE ? this.text() : this.furigana();
 
-        xx.setValue(x + textGap / 2);
+        float mainWidth = handler.getWidth(main) * FuriganaText.TEXT_SCALE;
+        float mainGap = (width - mainWidth) / Utils.charsFromOrdered(main).length();
+        xx.setValue(x + mainGap / 2);
 
-        text.accept((index, style, codePoint) -> {
+        main.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
 
             drawer.draw(
                 styled,
                 xx.floatValue(),
-                yText,
+                yMain,
                 new Matrix4f(matrix).scaleAround(
                     FuriganaText.TEXT_SCALE,
                     xx.floatValue(),
-                    yText,
+                    yMain,
                     0
                 )
             );
 
-            xx.add(handler.getWidth(styled) * FuriganaText.TEXT_SCALE + textGap);
+            xx.add(handler.getWidth(styled) * FuriganaText.TEXT_SCALE + mainGap);
             return true;
         });
 

@@ -8,7 +8,8 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public enum FuriganaMode {
-    ABOVE("above"),
+    NORMAL("normal"),
+    INVERSE("inverse"),
     REPLACE("replace"),
     HIDDEN("hidden");
 
@@ -22,7 +23,7 @@ public enum FuriganaMode {
             Arrays.asList(FuriganaMode.values()),
             Codec.INT.xmap(FuriganaMode::byOrdinal, FuriganaMode::ordinal)
         ),
-        FuriganaMode.ABOVE,
+        FuriganaMode.NORMAL,
         (value) -> {
             Utils.LOGGER.info("Furigana mode set to {}", value);
             VALUE.set(value.ordinal());

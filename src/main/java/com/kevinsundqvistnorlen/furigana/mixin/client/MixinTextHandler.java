@@ -34,7 +34,7 @@ public abstract class MixinTextHandler {
         for (final var part : parsed.texts()) {
             if (part.getClass() == FuriganaText.class) {
                 width += switch (mode) {
-                    case ABOVE -> ((FuriganaText) part).getWidth((TextHandler) (Object) this);
+                    case NORMAL, INVERSE -> ((FuriganaText) part).getWidth((TextHandler) (Object) this);
                     case REPLACE -> this.getWidth(((FuriganaText) part).furigana());
                     case HIDDEN -> this.getWidth(((FuriganaText) part).text());
                 };
