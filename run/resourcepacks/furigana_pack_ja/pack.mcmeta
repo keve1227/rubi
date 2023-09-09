@@ -5,8 +5,8 @@
     },
     "language": {
         "ja_jp_furigana": {
-            "name": "日本語にほんご (振ふり仮名がな)",
-            "region": "日本にほん",
+            "name": "日本語にほんご＋振ふり仮名がな",
+            "region": "日本にほん",
             "bidirectional": false
         }
     }
