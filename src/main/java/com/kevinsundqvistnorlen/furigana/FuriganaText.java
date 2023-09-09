@@ -3,7 +3,7 @@ package com.kevinsundqvistnorlen.furigana;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
-import org.apache.commons.lang3.mutable.MutableFloat;
+import org.apache.commons.lang3.mutable.*;
 import org.jetbrains.annotations.*;
 import org.joml.Math;
 import org.joml.*;
@@ -11,45 +11,35 @@ import org.joml.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class FuriganaText implements OrderedText {
+public record FuriganaText(OrderedText text, OrderedText furigana) implements OrderedText {
 
-    public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0?(\\p{L}+)\ue9c1([^\ue9c2]+)\ue9c2");
+    public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0(\\p{L}+)\ue9c1([^\ue9c2]+)\ue9c2");
     public static final float FURIGANA_SCALE = 0.5f;
     public static final float TEXT_SCALE = 0.8f;
 
-    private static final HashMap<UniqueOrderedText, FuriganaParseResult> CACHE = new HashMap<>();
+    private static final HashMap<OrderedTextKey, FuriganaParseResult> CACHE = new HashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;
 
-    private final @NotNull NonParseOrderedText text;
-    private final @Nullable NonParseOrderedText furigana;
-
-    public FuriganaText(@NotNull OrderedText text, @Nullable OrderedText furigana) {
-        this.text = NonParseOrderedText.of(text);
-        this.furigana = NonParseOrderedText.of(Utils.style(furigana, style -> style.withBold(true)));
+    public FuriganaText(@NotNull OrderedText text, @NotNull OrderedText furigana) {
+        this.text = text;
+        this.furigana = Utils.styleOrdered(furigana, style -> style.withUnderline(false).withBold(true));
     }
 
-    public FuriganaText(@NotNull OrderedText text) {
-        this(text, null);
-    }
-
-    private static OrderedText styledChars(CharSequence chars, Collection<Style> styles) {
+    private static OrderedText styledChars(CharSequence chars, Collection<? extends Style> styles) {
         Queue<Style> queue = new ArrayDeque<>(styles);
         List<OrderedText> result = new ArrayList<>();
         chars.codePoints().forEachOrdered(codePoint -> result.add(OrderedText.styled(codePoint, queue.poll())));
         return OrderedText.innerConcat(result);
     }
 
-    public static FuriganaParseResult parseCached(OrderedText text) {
+    public static FuriganaParseResult cachedParse(OrderedText text) {
         if (text.getClass().equals(FuriganaText.class)) {
-            return new FuriganaParseResult((FuriganaText) text);
-        }
-
-        if (text.getClass().equals(NonParseOrderedText.class)) {
-            return new FuriganaParseResult(new FuriganaText(text));
+            return new FuriganaParseResult(text);
         }
 
         try {
-            return CACHE.computeIfAbsent(new UniqueOrderedText(text), FuriganaText::parse);
+            return Optional.ofNullable(CACHE.computeIfAbsent(new OrderedTextKey(text), FuriganaText::internalParse))
+                .orElseGet(() -> new FuriganaParseResult(text));
         } finally {
             while (CACHE.size() >= CACHE_MAX_SIZE) {
                 CACHE.remove(CACHE.keySet().stream().findAny().get());
@@ -57,16 +47,10 @@ public class FuriganaText implements OrderedText {
         }
     }
 
-    private static FuriganaParseResult parse(OrderedText text) {
+    private static @Nullable FuriganaParseResult internalParse(OrderedText text) {
         if (text.getClass().equals(FuriganaText.class)) {
-            return new FuriganaParseResult((FuriganaText) text);
+            return new FuriganaParseResult(text);
         }
-
-        if (text.getClass().equals(NonParseOrderedText.class)) {
-            return new FuriganaParseResult(new FuriganaText(text));
-        }
-
-        List<FuriganaText> result = new ArrayList<>();
 
         StringBuilder builder = new StringBuilder();
         List<Style> styles = new ArrayList<>();
@@ -77,14 +61,18 @@ public class FuriganaText implements OrderedText {
             return true;
         });
 
+        // A text with less than 4 characters can't possibly contain furigana.
+        if (builder.length() < 4) return null; // null means a no-cache result.
+
+        List<OrderedText> result = new ArrayList<>();
+
         var matcher = FURIGANA_PATTERN.matcher(builder);
         int last = 0;
 
         while (matcher.find()) {
             var start = matcher.start();
             if (start > last) {
-                var tail = FuriganaText.styledChars(builder.subSequence(last, start), styles.subList(last, start));
-                result.add(new FuriganaText(tail, null));
+                result.add(FuriganaText.styledChars(builder.subSequence(last, start), styles.subList(last, start)));
             }
 
             var ruby = FuriganaText.styledChars(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
@@ -95,40 +83,23 @@ public class FuriganaText implements OrderedText {
         }
 
         if (result.isEmpty()) {
-            return new FuriganaParseResult(List.of(new FuriganaText(text)));
+            return new FuriganaParseResult(text);
         }
 
         if (last < builder.length()) {
-            var tail = FuriganaText.styledChars(
+            result.add(FuriganaText.styledChars(
                 builder.subSequence(last, builder.length()),
                 styles.subList(last, builder.length())
-            );
-            result.add(new FuriganaText(tail));
+            ));
         }
 
         return new FuriganaParseResult(result);
     }
 
-    public NonParseOrderedText getText() {
-        return this.text;
-    }
-
-    public NonParseOrderedText getFurigana() {
-        return this.furigana == null ? NonParseOrderedText.of(Utils.orderedFrom("")) : this.furigana;
-    }
-
-    public boolean hasFurigana() {
-        return this.furigana != null;
-    }
-
     public float getWidth(TextHandler handler) {
-        if (!this.hasFurigana()) {
-            return handler.getWidth(this.getText());
-        }
-
         return Math.max(
-            handler.getWidth(this.getText()) * FuriganaText.TEXT_SCALE,
-            handler.getWidth(this.getFurigana()) * FuriganaText.FURIGANA_SCALE
+            handler.getWidth(this.text()) * FuriganaText.TEXT_SCALE,
+            handler.getWidth(this.furigana()) * FuriganaText.FURIGANA_SCALE
         );
     }
 
@@ -140,83 +111,88 @@ public class FuriganaText implements OrderedText {
         int fontHeight,
         TextDrawer drawer
     ) {
-        float width = this.getWidth(handler);
+        final float width = this.getWidth(handler);
+        MutableFloat xx = new MutableFloat();
 
-        if (this.hasFurigana()) {
-            MutableFloat xx = new MutableFloat();
+        var furigana = this.furigana();
+        float furiganaWidth = handler.getWidth(furigana) * FuriganaText.FURIGANA_SCALE;
+        float furiganaHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
+        float furiganaGap = (width - furiganaWidth) / Utils.charsFromOrdered(furigana).length();
 
-            var furigana = this.getFurigana();
-            float furiganaWidth = handler.getWidth(NonParseOrderedText.of(furigana)) * FuriganaText.FURIGANA_SCALE;
-            float furiganaHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
-            float furiganaGap = (width - furiganaWidth) / Utils.charsFrom(furigana).length();
+        xx.setValue(x + furiganaGap / 2);
+        float yy = y - furiganaHeight;
 
-            xx.setValue(x + furiganaGap / 2);
-            float yy = y - furiganaHeight;
+        furigana.accept((index, style, codePoint) -> {
+            var styled = OrderedText.styled(codePoint, style);
 
-            furigana.accept((index, style, codePoint) -> {
-                var styled = NonParseOrderedText.of(OrderedText.styled(codePoint, style));
-
-                drawer.draw(
-                    styled,
+            drawer.draw(
+                styled,
+                xx.floatValue(),
+                yy,
+                new Matrix4f(matrix).scaleAround(
+                    FuriganaText.FURIGANA_SCALE,
                     xx.floatValue(),
-                    yy,
-                    new Matrix4f(matrix).scaleAround(
-                        FuriganaText.FURIGANA_SCALE,
-                        xx.floatValue(),
-                        yy + furiganaHeight,
-                        0
-                    )
-                );
+                    yy + furiganaHeight,
+                    0
+                )
+            );
 
-                xx.add(handler.getWidth(styled) * FuriganaText.FURIGANA_SCALE + furiganaGap);
-                return true;
-            });
+            xx.add(handler.getWidth(styled) * FuriganaText.FURIGANA_SCALE + furiganaGap);
+            return true;
+        });
 
-            var text = this.getText();
-            float textWidth = handler.getWidth(text) * FuriganaText.TEXT_SCALE;
-            float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
-            float textGap = (width - textWidth) / Utils.charsFrom(this.getText()).length();
+        var text = this.text();
+        float textWidth = handler.getWidth(text) * FuriganaText.TEXT_SCALE;
+        float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
+        float textGap = (width - textWidth) / Utils.charsFromOrdered(this.text()).length();
 
-            xx.setValue(x + textGap / 2);
+        xx.setValue(x + textGap / 2);
 
-            text.accept((index, style, codePoint) -> {
-                var styled = NonParseOrderedText.of(OrderedText.styled(codePoint, style));
+        text.accept((index, style, codePoint) -> {
+            var styled = OrderedText.styled(codePoint, style);
 
-                drawer.draw(
-                    styled,
+            drawer.draw(
+                styled,
+                xx.floatValue(),
+                y,
+                new Matrix4f(matrix).scaleAround(
+                    FuriganaText.TEXT_SCALE,
                     xx.floatValue(),
-                    y,
-                    new Matrix4f(matrix).scaleAround(
-                        FuriganaText.TEXT_SCALE,
-                        xx.floatValue(),
-                        y + textHeight,
-                        0
-                    )
-                );
+                    y + textHeight,
+                    0
+                )
+            );
 
-                xx.add(handler.getWidth(styled) * FuriganaText.TEXT_SCALE + textGap);
-                return true;
-            });
-        } else {
-            drawer.draw(this.text, x, y, matrix);
-        }
+            xx.add(handler.getWidth(styled) * FuriganaText.TEXT_SCALE + textGap);
+            return true;
+        });
 
         return width;
     }
 
     @Override
     public boolean accept(CharacterVisitor visitor) {
-        return this.text.accept(visitor);
+        return OrderedText.concat(
+            OrderedText.styled('\ue9c0', Style.EMPTY),
+            this.text,
+            OrderedText.styled('\ue9c1', Style.EMPTY),
+
+            OrderedText.styled('\ue9c2', Style.EMPTY)
+        ).accept(visitor);
     }
 
-    public record FuriganaParseResult(Collection<FuriganaText> texts) {
+    public record FuriganaParseResult(Collection<OrderedText> texts) {
 
-        public FuriganaParseResult(FuriganaText text) {
+        public FuriganaParseResult(OrderedText text) {
             this(ImmutableList.of(text));
         }
 
         public boolean hasFurigana() {
-            return this.texts.stream().anyMatch(FuriganaText::hasFurigana);
+            for (final var text : this.texts) {
+                if (text.getClass() == FuriganaText.class) return true;
+            }
+
+            return false;
         }
 
         public float draw(
@@ -228,34 +204,58 @@ public class FuriganaText implements OrderedText {
             TextDrawer drawer
         ) {
             float advance = x;
+
             for (final var text : this.texts) {
-                advance += text.draw(advance, y, matrix, handler, fontHeight, drawer);
+                if (text.getClass() == FuriganaText.class) {
+                    advance += ((FuriganaText) text).draw(advance, y, matrix, handler, fontHeight, drawer);
+                } else {
+                    drawer.draw(text, advance, y, matrix);
+                    advance += handler.getWidth(text);
+                }
             }
 
             return advance;
         }
     }
 
-    public record NonParseOrderedText(OrderedText text) implements OrderedText {
-        public NonParseOrderedText {
-            if (text instanceof NonParseOrderedText) {
-                throw new IllegalArgumentException("Cannot nest NonParseOrderedText");
-            }
-        }
+    private record OrderedTextKey(OrderedText text) implements OrderedText {
+        private static final long FNV_OFFSET_BASIS = -3750763034362895579L;
+        private static final long FNV_PRIME = 1099511628211L;
 
-        public static NonParseOrderedText of(OrderedText text) {
-            if (text == null) return null;
+        public long longHashCode() {
+            var hash = new MutableLong(OrderedTextKey.FNV_OFFSET_BASIS);
 
-            if (text.getClass() == NonParseOrderedText.class) {
-                return (NonParseOrderedText) text;
-            }
+            this.accept((index, style, codePoint) -> {
+                long h = hash.longValue();
+                h *= OrderedTextKey.FNV_PRIME;
+                h ^= codePoint;
+                h *= OrderedTextKey.FNV_PRIME;
+                h ^= style.hashCode();
+                hash.setValue(h);
+                return true;
+            });
 
-            return new NonParseOrderedText(text);
+            return hash.longValue();
         }
 
         @Override
         public boolean accept(CharacterVisitor visitor) {
             return this.text.accept(visitor);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof OrderedTextKey other) {
+                return other.longHashCode() == this.longHashCode();
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long hash = this.longHashCode();
+            return (int) (hash ^ (hash >>> 32));
         }
     }
 }

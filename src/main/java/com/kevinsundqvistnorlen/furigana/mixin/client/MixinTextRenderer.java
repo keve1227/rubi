@@ -105,7 +105,7 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfoReturnable<Integer> info
     ) {
-        var parsed = FuriganaText.parseCached(text);
+        var parsed = FuriganaText.cachedParse(text);
 
         if (parsed.hasFurigana()) {
             float advance = parsed.draw(
@@ -144,7 +144,7 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfo info
     ) {
-        var parsed = FuriganaText.parseCached(text);
+        var parsed = FuriganaText.cachedParse(text);
 
         if (parsed.hasFurigana()) {
             parsed.draw(

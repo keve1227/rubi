@@ -25,12 +25,16 @@ public abstract class MixinTextHandler {
 
     @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
     public void injectGetWidth(OrderedText text, CallbackInfoReturnable<Float> info) {
-        var parsed = FuriganaText.parseCached(text);
+        var parsed = FuriganaText.cachedParse(text);
         if (!parsed.hasFurigana()) return;
 
         float width = 0;
         for (final var part : parsed.texts()) {
-            width += part.getWidth((TextHandler) (Object) this);
+            if (part.getClass() == FuriganaText.class) {
+                width += ((FuriganaText) part).getWidth((TextHandler) (Object) this);
+            } else {
+                width += this.getWidth(part);
+            }
         }
 
         info.setReturnValue(width);
