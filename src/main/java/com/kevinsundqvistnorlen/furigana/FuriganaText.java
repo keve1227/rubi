@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.*;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 import org.joml.*;
 
@@ -14,16 +14,13 @@ import java.util.regex.Pattern;
 public record FuriganaText(OrderedText text, OrderedText furigana) implements OrderedText {
 
     public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0(\\p{L}+)\ue9c1([^\ue9c2]+)\ue9c2");
+
     public static final float FURIGANA_SCALE = 0.5f;
+    public static final float FURIGANA_OVERLAP = 0.1f;
     public static final float TEXT_SCALE = 0.8f;
 
     private static final HashMap<OrderedTextKey, FuriganaParseResult> CACHE = new HashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;
-
-    public FuriganaText(@NotNull OrderedText text, @NotNull OrderedText furigana) {
-        this.text = text;
-        this.furigana = Utils.styleOrdered(furigana, style -> style.withUnderline(false).withBold(true));
-    }
 
     private static OrderedText styledChars(CharSequence chars, Collection<? extends Style> styles) {
         Queue<Style> queue = new ArrayDeque<>(styles);
@@ -111,16 +108,35 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         int fontHeight,
         TextDrawer drawer
     ) {
-        final float width = this.getWidth(handler);
+        return switch (FuriganaMode.getValue()) {
+            case ABOVE -> this.drawAbove(x, y, matrix, handler, fontHeight, drawer);
+            case REPLACE -> this.drawReplace(x, y, matrix, handler, drawer);
+            case HIDDEN -> this.drawHidden(x, y, matrix, handler, drawer);
+        };
+    }
+
+    public float drawAbove(
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextHandler handler,
+        int fontHeight,
+        TextDrawer drawer
+    ) {
+        final float width = handler.getWidth(this);
+        final float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
+        final float furiganaHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
+
+        final float yText = y + (fontHeight - textHeight);
+        final float yFurigana = yText - furiganaHeight + fontHeight * FuriganaText.FURIGANA_OVERLAP;
+
         MutableFloat xx = new MutableFloat();
 
-        var furigana = this.furigana();
+        var furigana = Utils.styleOrdered(this.furigana(), style -> style.withUnderline(false).withBold(true));
         float furiganaWidth = handler.getWidth(furigana) * FuriganaText.FURIGANA_SCALE;
-        float furiganaHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
         float furiganaGap = (width - furiganaWidth) / Utils.charsFromOrdered(furigana).length();
 
         xx.setValue(x + furiganaGap / 2);
-        float yy = y - furiganaHeight;
 
         furigana.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
@@ -128,11 +144,11 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
             drawer.draw(
                 styled,
                 xx.floatValue(),
-                yy,
+                yFurigana,
                 new Matrix4f(matrix).scaleAround(
                     FuriganaText.FURIGANA_SCALE,
                     xx.floatValue(),
-                    yy + furiganaHeight,
+                    yFurigana,
                     0
                 )
             );
@@ -143,7 +159,6 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
 
         var text = this.text();
         float textWidth = handler.getWidth(text) * FuriganaText.TEXT_SCALE;
-        float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
         float textGap = (width - textWidth) / Utils.charsFromOrdered(this.text()).length();
 
         xx.setValue(x + textGap / 2);
@@ -154,11 +169,11 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
             drawer.draw(
                 styled,
                 xx.floatValue(),
-                y,
+                yText,
                 new Matrix4f(matrix).scaleAround(
                     FuriganaText.TEXT_SCALE,
                     xx.floatValue(),
-                    y + textHeight,
+                    yText,
                     0
                 )
             );
@@ -168,6 +183,28 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         });
 
         return width;
+    }
+
+    public float drawReplace(
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextHandler handler,
+        TextDrawer drawer
+    ) {
+        drawer.draw(this.furigana(), x, y, matrix);
+        return handler.getWidth(this);
+    }
+
+    public float drawHidden(
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextHandler handler,
+        TextDrawer drawer
+    ) {
+        drawer.draw(this.text(), x, y, matrix);
+        return handler.getWidth(this);
     }
 
     @Override

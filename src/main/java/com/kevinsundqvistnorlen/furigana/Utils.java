@@ -1,16 +1,14 @@
 package com.kevinsundqvistnorlen.furigana;
 
 import net.minecraft.text.*;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.*;
 
 import java.util.function.UnaryOperator;
 
-import org.jetbrains.annotations.NotNull;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
 public final class Utils {
 
-    // public static final Logger LOGGER = LoggerFactory.getLogger("Furigana");
+    public static final Logger LOGGER = LoggerFactory.getLogger("Furigana");
 
     public static OrderedText orderedFrom(String text) {
         return Text.literal(text).asOrderedText();

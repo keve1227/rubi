@@ -28,10 +28,16 @@ public abstract class MixinTextHandler {
         var parsed = FuriganaText.cachedParse(text);
         if (!parsed.hasFurigana()) return;
 
+        final FuriganaMode mode = FuriganaMode.getValue();
+
         float width = 0;
         for (final var part : parsed.texts()) {
             if (part.getClass() == FuriganaText.class) {
-                width += ((FuriganaText) part).getWidth((TextHandler) (Object) this);
+                width += switch (mode) {
+                    case ABOVE -> ((FuriganaText) part).getWidth((TextHandler) (Object) this);
+                    case REPLACE -> this.getWidth(((FuriganaText) part).furigana());
+                    case HIDDEN -> this.getWidth(((FuriganaText) part).text());
+                };
             } else {
                 width += this.getWidth(part);
             }

@@ -3,6 +3,8 @@
     "package": "com.kevinsundqvistnorlen.furigana.mixin.client",
     "compatibilityLevel": "JAVA_17",
     "client": [
+        "MixinAccessibilityOptionsScreen",
+        "MixinGameOptions",
         "MixinLineBreakingVisitor",
         "MixinTextHandler",
         "MixinTextRenderer"
