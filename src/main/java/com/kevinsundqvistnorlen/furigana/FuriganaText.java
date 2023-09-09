@@ -134,9 +134,9 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
 
         var furigana = Utils.styleOrdered(this.furigana(), style -> style.withUnderline(false).withBold(true));
         float furiganaWidth = handler.getWidth(furigana) * FuriganaText.FURIGANA_SCALE;
-        float furiganaGap = (width - furiganaWidth) / Utils.charsFromOrdered(furigana).length();
+        float furiganaGap = (width - furiganaWidth) / (Utils.charsFromOrdered(furigana).length() + 1);
 
-        xx.setValue(x + furiganaGap / 2);
+        xx.setValue(x + furiganaGap);
 
         furigana.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
@@ -159,9 +159,9 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
 
         var text = this.text();
         float textWidth = handler.getWidth(text) * FuriganaText.TEXT_SCALE;
-        float textGap = (width - textWidth) / Utils.charsFromOrdered(this.text()).length();
+        float textGap = (width - textWidth) / (Utils.charsFromOrdered(text).length() + 1);
 
-        xx.setValue(x + textGap / 2);
+        xx.setValue(x + textGap);
 
         text.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
