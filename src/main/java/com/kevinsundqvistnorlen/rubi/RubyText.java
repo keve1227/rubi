@@ -109,115 +109,100 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         int fontHeight,
         TextDrawer drawer
     ) {
-        return switch (RubyDisplayMode.getValue()) {
-            case ABOVE -> this.drawAbove(x, y, matrix, handler, fontHeight, drawer);
-            case BELOW -> this.drawBelow(x, y, matrix, handler, fontHeight, drawer);
-            case REPLACE -> this.drawReplace(x, y, matrix, handler, drawer);
-            case OFF -> this.drawHidden(x, y, matrix, handler, drawer);
-        };
+        float width = handler.getWidth(this);
+
+        switch (RubyDisplayMode.getValue()) {
+            case ABOVE -> this.drawAbove(x, y, width, matrix, handler, fontHeight, drawer);
+            case BELOW -> this.drawBelow(x, y, width, matrix, handler, fontHeight, drawer);
+            case REPLACE -> this.drawReplace(x, y, matrix, drawer);
+            case OFF -> this.drawHidden(x, y, matrix, drawer);
+        }
+
+        return width;
     }
 
-    public float drawAbove(
+    private void drawRubyPair(
+        float x,
+        float yText,
+        float yRuby,
+        float width,
+        TextDrawer drawer,
+        TextHandler handler,
+        Matrix4f matrix
+    ) {
+        drawer.drawSpacedApart(
+            this.text(),
+            x,
+            yText,
+            width,
+            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, yText, 0),
+            handler
+        );
+
+        drawer.drawSpacedApart(
+            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
+            x,
+            yRuby,
+            width,
+            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yRuby, 0),
+            handler
+        );
+    }
+
+    public void drawAbove(
         float x,
         float y,
+        float width,
         Matrix4f matrix,
         TextHandler handler,
         int fontHeight,
         TextDrawer drawer
     ) {
-        float width = handler.getWidth(this);
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float rubyHeight = fontHeight * RubyText.RUBY_SCALE;
 
         float yBody = y + (fontHeight - textHeight);
         float yAbove = yBody - rubyHeight + fontHeight * RubyText.RUBY_OVERLAP;
 
-        drawer.drawSpacedApart(
-            this.text(),
-            x,
-            yBody,
-            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, yBody, 0),
-            handler,
-            width
-        );
-
-        drawer.drawSpacedApart(
-            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
-            x,
-            yAbove,
-            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yAbove, 0),
-            handler,
-            width
-        );
-
-        return width;
+        this.drawRubyPair(x, yBody, yAbove, width, drawer, handler, matrix);
     }
 
-    public float drawBelow(
+    public void drawBelow(
         float x,
         float y,
+        float width,
         Matrix4f matrix,
         TextHandler handler,
         int fontHeight,
         TextDrawer drawer
     ) {
-        float width = handler.getWidth(this);
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
-
         float yBelow = y + textHeight - fontHeight * RubyText.RUBY_OVERLAP;
 
-        drawer.drawSpacedApart(
-            this.text(),
-            x,
-            y,
-            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, y, 0),
-            handler,
-            width
-        );
-
-        drawer.drawSpacedApart(
-            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
-            x,
-            yBelow,
-            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yBelow, 0),
-            handler,
-            width
-        );
-
-        return width;
+        this.drawRubyPair(x, y, yBelow, width, drawer, handler, matrix);
     }
 
-    public float drawReplace(
+    public void drawReplace(
         float x,
         float y,
         Matrix4f matrix,
-        TextHandler handler,
         TextDrawer drawer
     ) {
         drawer.draw(this.ruby(), x, y, matrix);
-        return handler.getWidth(this);
     }
 
-    public float drawHidden(
+    public void drawHidden(
         float x,
         float y,
         Matrix4f matrix,
-        TextHandler handler,
         TextDrawer drawer
     ) {
         drawer.draw(this.text(), x, y, matrix);
-        return handler.getWidth(this);
     }
 
     @Override
     public boolean accept(CharacterVisitor visitor) {
-        return OrderedText.concat(
-            OrderedText.styled('\ue9c0', Style.EMPTY),
-            this.text,
-            OrderedText.styled('\ue9c1', Style.EMPTY),
-
-            OrderedText.styled('\ue9c2', Style.EMPTY)
-        ).accept(visitor);
+        return this.text().accept(visitor);
     }
 
     public record RubyParseResult(Collection<OrderedText> texts) {

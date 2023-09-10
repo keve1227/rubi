@@ -116,8 +116,8 @@ public abstract class MixinTextRenderer {
                 this.fontHeight,
                 (t, xx, yy, m) -> this.draw(
                     t,
-                    xx,
-                    yy,
+                    Math.round(xx),
+                    Math.round(yy),
                     color,
                     shadow,
                     m,
@@ -128,7 +128,7 @@ public abstract class MixinTextRenderer {
                 )
             );
 
-            info.setReturnValue((int) Math.floor(advance));
+            info.setReturnValue((int) Math.ceil(advance));
         }
     }
 

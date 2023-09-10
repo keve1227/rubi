@@ -13,13 +13,13 @@ public interface TextDrawer {
         OrderedText text,
         float x,
         float y,
+        float boxWidth,
         Matrix4f matrix,
-        TextHandler handler,
-        float totalWidth
+        TextHandler handler
     ) {
         float scaleX = new Vector4f(1, 0, 0, 0).mul(matrix).x;
         float width = handler.getWidth(text) * scaleX;
-        float gap = (totalWidth - width) / Utils.charsFromOrdered(text).length();
+        float gap = (boxWidth - width) / Utils.charsFromOrdered(text).length();
 
         var offsetX = new MutableFloat(gap / 2);
         text.accept((index, style, codePoint) -> {
