@@ -1,4 +1,4 @@
-package com.kevinsundqvistnorlen.furigana;
+package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.text.OrderedText;
 import org.joml.Matrix4f;

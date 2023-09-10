@@ -1,6 +1,7 @@
-package com.kevinsundqvistnorlen.furigana;
+package com.kevinsundqvistnorlen.rubi;
 
 import com.google.common.collect.ImmutableList;
+import com.kevinsundqvistnorlen.rubi.option.RubyMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.*;
@@ -11,15 +12,15 @@ import org.joml.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public record FuriganaText(OrderedText text, OrderedText furigana) implements OrderedText {
+public record RubyText(OrderedText text, OrderedText ruby) implements OrderedText {
 
-    public static final Pattern FURIGANA_PATTERN = Pattern.compile("\ue9c0([^\ue9c1]+)\ue9c1([^\ue9c2]+)\ue9c2");
+    public static final Pattern RUBY_PATTERN = Pattern.compile("\ue9c0([^\ue9c1]+)\ue9c1([^\ue9c2]+)\ue9c2");
 
-    public static final float FURIGANA_SCALE = 0.5f;
-    public static final float FURIGANA_OVERLAP = 0.1f;
+    public static final float RUBY_SCALE = 0.5f;
+    public static final float RUBY_OVERLAP = 0.1f;
     public static final float TEXT_SCALE = 0.8f;
 
-    private static final HashMap<OrderedTextKey, FuriganaParseResult> CACHE = new HashMap<>();
+    private static final HashMap<OrderedTextKey, RubyParseResult> CACHE = new HashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;
 
     private static OrderedText styledChars(CharSequence chars, Collection<? extends Style> styles) {
@@ -29,14 +30,14 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         return OrderedText.innerConcat(result);
     }
 
-    public static FuriganaParseResult cachedParse(OrderedText text) {
-        if (text.getClass().equals(FuriganaText.class)) {
-            return new FuriganaParseResult(text);
+    public static RubyParseResult cachedParse(OrderedText text) {
+        if (text.getClass().equals(RubyText.class)) {
+            return new RubyParseResult(text);
         }
 
         try {
-            return Optional.ofNullable(CACHE.computeIfAbsent(new OrderedTextKey(text), FuriganaText::internalParse))
-                .orElseGet(() -> new FuriganaParseResult(text));
+            return Optional.ofNullable(CACHE.computeIfAbsent(new OrderedTextKey(text), RubyText::internalParse))
+                .orElseGet(() -> new RubyParseResult(text));
         } finally {
             while (CACHE.size() >= CACHE_MAX_SIZE) {
                 CACHE.remove(CACHE.keySet().stream().findAny().get());
@@ -44,9 +45,9 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         }
     }
 
-    private static @Nullable FuriganaParseResult internalParse(OrderedText text) {
-        if (text.getClass().equals(FuriganaText.class)) {
-            return new FuriganaParseResult(text);
+    private static @Nullable RubyText.RubyParseResult internalParse(OrderedText text) {
+        if (text.getClass().equals(RubyText.class)) {
+            return new RubyParseResult(text);
         }
 
         StringBuilder builder = new StringBuilder();
@@ -58,45 +59,45 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
             return true;
         });
 
-        // A text with less than 4 characters can't possibly contain furigana.
+        // A text with less than 4 characters can't possibly contain ruby.
         if (builder.length() < 4) return null; // null means a no-cache result.
 
         List<OrderedText> result = new ArrayList<>();
 
-        var matcher = FURIGANA_PATTERN.matcher(builder);
+        var matcher = RUBY_PATTERN.matcher(builder);
         int last = 0;
 
         while (matcher.find()) {
             var start = matcher.start();
             if (start > last) {
-                result.add(FuriganaText.styledChars(builder.subSequence(last, start), styles.subList(last, start)));
+                result.add(RubyText.styledChars(builder.subSequence(last, start), styles.subList(last, start)));
             }
 
-            var ruby = FuriganaText.styledChars(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
-            var furigana = FuriganaText.styledChars(matcher.group(2), styles.subList(matcher.start(2), matcher.end(2)));
-            result.add(new FuriganaText(ruby, furigana));
+            var body = RubyText.styledChars(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
+            var ruby = RubyText.styledChars(matcher.group(2), styles.subList(matcher.start(2), matcher.end(2)));
+            result.add(new RubyText(body, ruby));
 
             last = matcher.end();
         }
 
         if (result.isEmpty()) {
-            return new FuriganaParseResult(text);
+            return new RubyParseResult(text);
         }
 
         if (last < builder.length()) {
-            result.add(FuriganaText.styledChars(
+            result.add(RubyText.styledChars(
                 builder.subSequence(last, builder.length()),
                 styles.subList(last, builder.length())
             ));
         }
 
-        return new FuriganaParseResult(result);
+        return new RubyParseResult(result);
     }
 
     public float getWidth(TextHandler handler) {
         return Math.max(
-            handler.getWidth(this.text()) * FuriganaText.TEXT_SCALE,
-            handler.getWidth(this.furigana()) * FuriganaText.FURIGANA_SCALE
+            handler.getWidth(this.text()) * RubyText.TEXT_SCALE,
+            handler.getWidth(this.ruby()) * RubyText.RUBY_SCALE
         );
     }
 
@@ -108,7 +109,7 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         int fontHeight,
         TextDrawer drawer
     ) {
-        return switch (FuriganaMode.getValue()) {
+        return switch (RubyMode.getValue()) {
             case NORMAL, INVERSE -> this.drawNormal(x, y, matrix, handler, fontHeight, drawer);
             case REPLACE -> this.drawReplace(x, y, matrix, handler, drawer);
             case HIDDEN -> this.drawHidden(x, y, matrix, handler, drawer);
@@ -123,23 +124,23 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         int fontHeight,
         TextDrawer drawer
     ) {
-        final FuriganaMode mode = FuriganaMode.getValue();
+        final RubyMode mode = RubyMode.getValue();
 
         final float width = handler.getWidth(this);
-        final float textHeight = fontHeight * FuriganaText.TEXT_SCALE;
-        final float overHeight = fontHeight * FuriganaText.FURIGANA_SCALE;
+        final float textHeight = fontHeight * RubyText.TEXT_SCALE;
+        final float overHeight = fontHeight * RubyText.RUBY_SCALE;
 
         final float yMain = y + (fontHeight - textHeight);
-        final float yOver = yMain - overHeight + fontHeight * FuriganaText.FURIGANA_OVERLAP;
+        final float yOver = yMain - overHeight + fontHeight * RubyText.RUBY_OVERLAP;
 
         MutableFloat xx = new MutableFloat();
 
         var over = Utils.styleOrdered(
-            mode != FuriganaMode.INVERSE ? this.furigana() : this.text(),
+            mode != RubyMode.INVERSE ? this.ruby() : this.text(),
             style -> style.withUnderline(false).withBold(true)
         );
 
-        float overWidth = handler.getWidth(over) * FuriganaText.FURIGANA_SCALE;
+        float overWidth = handler.getWidth(over) * RubyText.RUBY_SCALE;
         float overGap = (width - overWidth) / Utils.charsFromOrdered(over).length();
         xx.setValue(x + overGap / 2);
 
@@ -151,20 +152,20 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
                 xx.floatValue(),
                 yOver,
                 new Matrix4f(matrix).scaleAround(
-                    FuriganaText.FURIGANA_SCALE,
+                    RubyText.RUBY_SCALE,
                     xx.floatValue(),
                     yOver,
                     0
                 )
             );
 
-            xx.add(handler.getWidth(styled) * FuriganaText.FURIGANA_SCALE + overGap);
+            xx.add(handler.getWidth(styled) * RubyText.RUBY_SCALE + overGap);
             return true;
         });
 
-        var main = mode != FuriganaMode.INVERSE ? this.text() : this.furigana();
+        var main = mode != RubyMode.INVERSE ? this.text() : this.ruby();
 
-        float mainWidth = handler.getWidth(main) * FuriganaText.TEXT_SCALE;
+        float mainWidth = handler.getWidth(main) * RubyText.TEXT_SCALE;
         float mainGap = (width - mainWidth) / Utils.charsFromOrdered(main).length();
         xx.setValue(x + mainGap / 2);
 
@@ -176,14 +177,14 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
                 xx.floatValue(),
                 yMain,
                 new Matrix4f(matrix).scaleAround(
-                    FuriganaText.TEXT_SCALE,
+                    RubyText.TEXT_SCALE,
                     xx.floatValue(),
                     yMain,
                     0
                 )
             );
 
-            xx.add(handler.getWidth(styled) * FuriganaText.TEXT_SCALE + mainGap);
+            xx.add(handler.getWidth(styled) * RubyText.TEXT_SCALE + mainGap);
             return true;
         });
 
@@ -197,7 +198,7 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         TextHandler handler,
         TextDrawer drawer
     ) {
-        drawer.draw(this.furigana(), x, y, matrix);
+        drawer.draw(this.ruby(), x, y, matrix);
         return handler.getWidth(this);
     }
 
@@ -223,15 +224,15 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
         ).accept(visitor);
     }
 
-    public record FuriganaParseResult(Collection<OrderedText> texts) {
+    public record RubyParseResult(Collection<OrderedText> texts) {
 
-        public FuriganaParseResult(OrderedText text) {
+        public RubyParseResult(OrderedText text) {
             this(ImmutableList.of(text));
         }
 
-        public boolean hasFurigana() {
+        public boolean hasRuby() {
             for (final var text : this.texts) {
-                if (text.getClass() == FuriganaText.class) return true;
+                if (text.getClass() == RubyText.class) return true;
             }
 
             return false;
@@ -248,8 +249,8 @@ public record FuriganaText(OrderedText text, OrderedText furigana) implements Or
             float advance = x;
 
             for (final var text : this.texts) {
-                if (text.getClass() == FuriganaText.class) {
-                    advance += ((FuriganaText) text).draw(advance, y, matrix, handler, fontHeight, drawer);
+                if (text.getClass() == RubyText.class) {
+                    advance += ((RubyText) text).draw(advance, y, matrix, handler, fontHeight, drawer);
                 } else {
                     drawer.draw(text, advance, y, matrix);
                     advance += handler.getWidth(text);

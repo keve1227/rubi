@@ -1,6 +1,6 @@
-package com.kevinsundqvistnorlen.furigana.mixin.client;
+package com.kevinsundqvistnorlen.rubi.mixin.client;
 
-import com.kevinsundqvistnorlen.furigana.FuriganaMode;
+import com.kevinsundqvistnorlen.rubi.option.RubyMode;
 import net.minecraft.client.gui.screen.option.AccessibilityOptionsScreen;
 import net.minecraft.client.option.SimpleOption;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ public class MixinAccessibilityOptionsScreen {
     private static void injectGetOptions(CallbackInfoReturnable<SimpleOption<?>[]> info) {
         SimpleOption<?>[] options = info.getReturnValue();
         SimpleOption<?>[] newOptions = Arrays.copyOf(options, options.length + 1);
-        newOptions[options.length] = FuriganaMode.OPTION;
+        newOptions[options.length] = RubyMode.OPTION;
         info.setReturnValue(newOptions);
     }
 }

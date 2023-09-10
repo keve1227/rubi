@@ -1,6 +1,6 @@
-package com.kevinsundqvistnorlen.furigana.mixin.client;
+package com.kevinsundqvistnorlen.rubi.mixin.client;
 
-import com.kevinsundqvistnorlen.furigana.*;
+import com.kevinsundqvistnorlen.rubi.*;
 import net.minecraft.client.font.*;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
@@ -105,9 +105,9 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfoReturnable<Integer> info
     ) {
-        var parsed = FuriganaText.cachedParse(text);
+        var parsed = RubyText.cachedParse(text);
 
-        if (parsed.hasFurigana()) {
+        if (parsed.hasRuby()) {
             float advance = parsed.draw(
                 x,
                 y,
@@ -144,9 +144,9 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfo info
     ) {
-        var parsed = FuriganaText.cachedParse(text);
+        var parsed = RubyText.cachedParse(text);
 
-        if (parsed.hasFurigana()) {
+        if (parsed.hasRuby()) {
             parsed.draw(
                 x,
                 y,

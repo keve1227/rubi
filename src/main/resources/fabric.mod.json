@@ -1,20 +1,20 @@
 {
     "schemaVersion": 1,
-    "id": "furigana",
+    "id": "rubi",
     "version": "${version}",
-    "name": "Furigana",
-    "description": "Enables the display of furigana/ruby annotations in Minecraft.",
+    "name": "Rubi",
+    "description": "Enables the display of rubi/ruby annotations in Minecraft.",
     "contact": {
-        "homepage": "https://furigana.kevinsundqvistnorlen.com/",
-        "sources": "https://github.com/keve1227/furigana",
-        "issues": "https://github.com/keve1227/furigana/issues"
+        "homepage": "https://rubi.kevinsundqvistnorlen.com/",
+        "sources": "https://github.com/keve1227/rubi",
+        "issues": "https://github.com/keve1227/rubi/issues"
     },
     "authors": ["keve1227"],
     "license": "GPL3",
-    "icon": "assets/furigana/icon.png",
+    "icon": "assets/rubi/icon.png",
     "environment": "client",
-    "mixins": ["furigana.mixins.json"],
-    "accessWidener": "furigana.accesswidener",
+    "mixins": ["rubi.mixins.json"],
+    "accessWidener": "rubi.accesswidener",
     "depends": {
         "fabricloader": ">=0.14.22",
         "minecraft": "~1.20.1",

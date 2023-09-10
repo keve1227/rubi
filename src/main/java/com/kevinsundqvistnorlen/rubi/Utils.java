@@ -1,4 +1,4 @@
-package com.kevinsundqvistnorlen.furigana;
+package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.text.*;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
 
 public final class Utils {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger("Furigana");
+    public static final Logger LOGGER = LoggerFactory.getLogger("Rubi");
 
     public static OrderedText orderedFrom(String text) {
         return Text.literal(text).asOrderedText();

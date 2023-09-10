@@ -1,0 +1,7 @@
+{
+    "options.rubi.mode": "Ruby Mode",
+    "options.rubi.mode.normal": "Normal",
+    "options.rubi.mode.inverse": "Inverse",
+    "options.rubi.mode.replace": "Replace",
+    "options.rubi.mode.hidden": "Hidden"
+}

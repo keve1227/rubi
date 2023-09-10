@@ -1,6 +1,7 @@
-package com.kevinsundqvistnorlen.furigana.mixin.client;
+package com.kevinsundqvistnorlen.rubi.mixin.client;
 
-import com.kevinsundqvistnorlen.furigana.*;
+import com.kevinsundqvistnorlen.rubi.*;
+import com.kevinsundqvistnorlen.rubi.option.RubyMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.spongepowered.asm.mixin.*;
@@ -25,18 +26,18 @@ public abstract class MixinTextHandler {
 
     @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
     public void injectGetWidth(OrderedText text, CallbackInfoReturnable<Float> info) {
-        var parsed = FuriganaText.cachedParse(text);
-        if (!parsed.hasFurigana()) return;
+        var parsed = RubyText.cachedParse(text);
+        if (!parsed.hasRuby()) return;
 
-        final FuriganaMode mode = FuriganaMode.getValue();
+        final RubyMode mode = RubyMode.getValue();
 
         float width = 0;
         for (final var part : parsed.texts()) {
-            if (part.getClass() == FuriganaText.class) {
+            if (part.getClass() == RubyText.class) {
                 width += switch (mode) {
-                    case NORMAL, INVERSE -> ((FuriganaText) part).getWidth((TextHandler) (Object) this);
-                    case REPLACE -> this.getWidth(((FuriganaText) part).furigana());
-                    case HIDDEN -> this.getWidth(((FuriganaText) part).text());
+                    case NORMAL, INVERSE -> ((RubyText) part).getWidth((TextHandler) (Object) this);
+                    case REPLACE -> this.getWidth(((RubyText) part).ruby());
+                    case HIDDEN -> this.getWidth(((RubyText) part).text());
                 };
             } else {
                 width += this.getWidth(part);

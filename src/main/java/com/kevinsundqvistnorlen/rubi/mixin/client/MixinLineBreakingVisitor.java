@@ -1,4 +1,4 @@
-package com.kevinsundqvistnorlen.furigana.mixin.client;
+package com.kevinsundqvistnorlen.rubi.mixin.client;
 
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.Style;
@@ -23,7 +23,7 @@ public abstract class MixinLineBreakingVisitor {
     private int startOffset;
 
     @Unique
-    private boolean furigana = false;
+    private boolean ruby = false;
 
     @Inject(method = "accept", at = @At("HEAD"), cancellable = true)
     public void injectAccept(int index, Style style, int codePoint, CallbackInfoReturnable<? super Boolean> info) {
@@ -35,12 +35,12 @@ public abstract class MixinLineBreakingVisitor {
             }
 
             case '\ue9c1' -> {
-                this.furigana = true;
+                this.ruby = true;
                 yield true;
             }
 
             case '\ue9c2' -> {
-                this.furigana = false;
+                this.ruby = false;
                 this.lastSpaceBreak = this.startOffset + index + 1;
                 this.lastSpaceStyle = style;
                 yield true;
@@ -49,7 +49,7 @@ public abstract class MixinLineBreakingVisitor {
             default -> false;
         };
 
-        if (discard || this.furigana) {
+        if (discard || this.ruby) {
             this.count += Character.charCount(codePoint);
             info.setReturnValue(true);
         }
