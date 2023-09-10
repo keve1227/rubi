@@ -1,6 +1,7 @@
 {
-    "options.rubi.rubyDisplayMode": "Ruby Display Mode",
-    "options.rubi.rubyDisplayMode.above": "§^Above (Above)",
-    "options.rubi.rubyDisplayMode.below": "§^Below (Below)",
-    "options.rubi.rubyDisplayMode.replace": "Replace Text"
+    "options.rubi.renderMode": "Rubies",
+    "options.rubi.renderMode.above": "§^Above (Above) Text",
+    "options.rubi.renderMode.below": "§^Below (Below) Text",
+    "options.rubi.renderMode.replace": "Replace Text",
+    "options.rubi.renderMode.hidden": "Hidden"
 }

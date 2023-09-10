@@ -1,7 +1,7 @@
 package com.kevinsundqvistnorlen.rubi;
 
 import com.google.common.collect.ImmutableList;
-import com.kevinsundqvistnorlen.rubi.option.RubyDisplayMode;
+import com.kevinsundqvistnorlen.rubi.option.RubyRenderMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -111,11 +111,11 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     ) {
         float width = handler.getWidth(this);
 
-        switch (RubyDisplayMode.getValue()) {
+        switch (RubyRenderMode.getValue()) {
             case ABOVE -> this.drawAbove(x, y, width, matrix, handler, fontHeight, drawer);
             case BELOW -> this.drawBelow(x, y, width, matrix, handler, fontHeight, drawer);
             case REPLACE -> this.drawReplace(x, y, matrix, drawer);
-            case OFF -> this.drawHidden(x, y, matrix, drawer);
+            case HIDDEN -> this.drawHidden(x, y, matrix, drawer);
         }
 
         return width;
