@@ -1,7 +1,7 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
 
 import com.kevinsundqvistnorlen.rubi.*;
-import com.kevinsundqvistnorlen.rubi.option.RubyMode;
+import com.kevinsundqvistnorlen.rubi.option.RubyDisplayMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.spongepowered.asm.mixin.*;
@@ -29,15 +29,15 @@ public abstract class MixinTextHandler {
         var parsed = RubyText.cachedParse(text);
         if (!parsed.hasRuby()) return;
 
-        final RubyMode mode = RubyMode.getValue();
+        final RubyDisplayMode mode = RubyDisplayMode.getValue();
 
         float width = 0;
         for (final var part : parsed.texts()) {
             if (part.getClass() == RubyText.class) {
                 width += switch (mode) {
-                    case NORMAL, INVERSE -> ((RubyText) part).getWidth((TextHandler) (Object) this);
+                    case ABOVE, BELOW -> ((RubyText) part).getWidth((TextHandler) (Object) this);
                     case REPLACE -> this.getWidth(((RubyText) part).ruby());
-                    case HIDDEN -> this.getWidth(((RubyText) part).text());
+                    case OFF -> this.getWidth(((RubyText) part).text());
                 };
             } else {
                 width += this.getWidth(part);

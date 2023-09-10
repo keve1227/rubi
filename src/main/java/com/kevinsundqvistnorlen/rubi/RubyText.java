@@ -1,10 +1,10 @@
 package com.kevinsundqvistnorlen.rubi;
 
 import com.google.common.collect.ImmutableList;
-import com.kevinsundqvistnorlen.rubi.option.RubyMode;
+import com.kevinsundqvistnorlen.rubi.option.RubyDisplayMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
-import org.apache.commons.lang3.mutable.*;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 import org.joml.*;
@@ -109,14 +109,15 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         int fontHeight,
         TextDrawer drawer
     ) {
-        return switch (RubyMode.getValue()) {
-            case NORMAL, INVERSE -> this.drawNormal(x, y, matrix, handler, fontHeight, drawer);
+        return switch (RubyDisplayMode.getValue()) {
+            case ABOVE -> this.drawAbove(x, y, matrix, handler, fontHeight, drawer);
+            case BELOW -> this.drawBelow(x, y, matrix, handler, fontHeight, drawer);
             case REPLACE -> this.drawReplace(x, y, matrix, handler, drawer);
-            case HIDDEN -> this.drawHidden(x, y, matrix, handler, drawer);
+            case OFF -> this.drawHidden(x, y, matrix, handler, drawer);
         };
     }
 
-    public float drawNormal(
+    public float drawAbove(
         float x,
         float y,
         Matrix4f matrix,
@@ -124,69 +125,64 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         int fontHeight,
         TextDrawer drawer
     ) {
-        final RubyMode mode = RubyMode.getValue();
+        float width = handler.getWidth(this);
+        float textHeight = fontHeight * RubyText.TEXT_SCALE;
+        float rubyHeight = fontHeight * RubyText.RUBY_SCALE;
 
-        final float width = handler.getWidth(this);
-        final float textHeight = fontHeight * RubyText.TEXT_SCALE;
-        final float overHeight = fontHeight * RubyText.RUBY_SCALE;
+        float yBody = y + (fontHeight - textHeight);
+        float yAbove = yBody - rubyHeight + fontHeight * RubyText.RUBY_OVERLAP;
 
-        final float yMain = y + (fontHeight - textHeight);
-        final float yOver = yMain - overHeight + fontHeight * RubyText.RUBY_OVERLAP;
-
-        MutableFloat xx = new MutableFloat();
-
-        var over = Utils.styleOrdered(
-            mode != RubyMode.INVERSE ? this.ruby() : this.text(),
-            style -> style.withUnderline(false).withBold(true)
+        drawer.drawSpacedApart(
+            this.text(),
+            x,
+            yBody,
+            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, yBody, 0),
+            handler,
+            width
         );
 
-        float overWidth = handler.getWidth(over) * RubyText.RUBY_SCALE;
-        float overGap = (width - overWidth) / Utils.charsFromOrdered(over).length();
-        xx.setValue(x + overGap / 2);
+        drawer.drawSpacedApart(
+            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
+            x,
+            yAbove,
+            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yAbove, 0),
+            handler,
+            width
+        );
 
-        over.accept((index, style, codePoint) -> {
-            var styled = OrderedText.styled(codePoint, style);
+        return width;
+    }
 
-            drawer.draw(
-                styled,
-                xx.floatValue(),
-                yOver,
-                new Matrix4f(matrix).scaleAround(
-                    RubyText.RUBY_SCALE,
-                    xx.floatValue(),
-                    yOver,
-                    0
-                )
-            );
+    public float drawBelow(
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextHandler handler,
+        int fontHeight,
+        TextDrawer drawer
+    ) {
+        float width = handler.getWidth(this);
+        float textHeight = fontHeight * RubyText.TEXT_SCALE;
 
-            xx.add(handler.getWidth(styled) * RubyText.RUBY_SCALE + overGap);
-            return true;
-        });
+        float yBelow = y + textHeight - fontHeight * RubyText.RUBY_OVERLAP;
 
-        var main = mode != RubyMode.INVERSE ? this.text() : this.ruby();
+        drawer.drawSpacedApart(
+            this.text(),
+            x,
+            y,
+            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, y, 0),
+            handler,
+            width
+        );
 
-        float mainWidth = handler.getWidth(main) * RubyText.TEXT_SCALE;
-        float mainGap = (width - mainWidth) / Utils.charsFromOrdered(main).length();
-        xx.setValue(x + mainGap / 2);
-
-        main.accept((index, style, codePoint) -> {
-            var styled = OrderedText.styled(codePoint, style);
-
-            drawer.draw(
-                styled,
-                xx.floatValue(),
-                yMain,
-                new Matrix4f(matrix).scaleAround(
-                    RubyText.TEXT_SCALE,
-                    xx.floatValue(),
-                    yMain,
-                    0
-                )
-            );
-
-            xx.add(handler.getWidth(styled) * RubyText.TEXT_SCALE + mainGap);
-            return true;
-        });
+        drawer.drawSpacedApart(
+            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
+            x,
+            yBelow,
+            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yBelow, 0),
+            handler,
+            width
+        );
 
         return width;
     }
