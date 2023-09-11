@@ -20,6 +20,12 @@ the game's accessibility settings. There are four options:
 - **Replace Text**: The annotated text is replaced with the ruby annotations.
 - **Hidden**: Self explanatory.
 
+## Compatible resource packs
+
+### Japanese
+
+- [Furigana](https://github.com/keve1227/furigana) by [keve1227](https://github.com/keve1227) (me)
+
 ## For resource pack creators
 
 Assuming you already know how to create a [resource pack](https://minecraft.fandom.com/wiki/Resource_pack), you can
