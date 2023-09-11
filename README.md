@@ -55,4 +55,5 @@ the text will be displayed as it is in the translation file (without the initial
 
 > ダイヤモンドの&nbsp;&nbsp;剣&nbsp;(&nbsp;&nbsp;&nbsp;&nbsp;けん&nbsp;&nbsp;)
 
-This means that compatible resource packs can be used without the mod installed, albeit without the ruby annotations.
+This means that compatible resource packs can be used without having installed the mod, albeit without proper ruby
+rendering.
