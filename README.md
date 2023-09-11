@@ -8,7 +8,7 @@ within the game itself. Additionally, I created/generated a dedicated resource p
 annotations for the Japanese language. While the resource pack is fairly comprehensive, please note that I haven't
 thoroughly verified every annotation (there are a _lot_ of them), so I should expect there to be some inaccuracies.
 
-**NOTE: This mod does basically nothing without a compatible language resource pack.**
+> **NOTE:** This mod does basically nothing without a compatible language resource pack.
 
 ## Options
 
