@@ -9,23 +9,33 @@ import org.joml.*;
 public interface TextDrawer {
     void draw(OrderedText text, float x, float y, Matrix4f matrix);
 
+    default void drawScaled(
+        OrderedText text,
+        float x,
+        float y,
+        float scale,
+        Matrix4f matrix
+    ) {
+        this.draw(text, x, y, new Matrix4f(matrix).scaleAround(scale, x, y, 0));
+    }
+
     default void drawSpacedApart(
         OrderedText text,
         float x,
         float y,
+        float scale,
         float boxWidth,
         Matrix4f matrix,
         TextHandler handler
     ) {
-        float scaleX = new Vector4f(1, 0, 0, 0).mul(matrix).x;
-        float width = handler.getWidth(text) * scaleX;
+        float width = handler.getWidth(text) * scale;
         float gap = (boxWidth - width) / Utils.charsFromOrdered(text).length();
 
-        var offsetX = new MutableFloat(gap / 2);
+        var xx = new MutableFloat(x + gap / 2);
         text.accept((index, style, codePoint) -> {
             var styled = OrderedText.styled(codePoint, style);
-            this.draw(styled, x + offsetX.floatValue() / scaleX, y, matrix);
-            offsetX.add(handler.getWidth(styled) * scaleX + gap);
+            this.drawScaled(styled, xx.floatValue(), y, scale, matrix);
+            xx.add(handler.getWidth(styled) * scale + gap);
             return true;
         });
     }

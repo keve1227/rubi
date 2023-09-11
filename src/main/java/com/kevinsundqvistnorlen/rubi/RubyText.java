@@ -134,8 +134,9 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
             this.text(),
             x,
             yText,
+            RubyText.TEXT_SCALE,
             width,
-            new Matrix4f(matrix).scaleAround(RubyText.TEXT_SCALE, x, yText, 0),
+            matrix,
             handler
         );
 
@@ -143,8 +144,9 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
             Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
             x,
             yRuby,
+            RubyText.RUBY_SCALE,
             width,
-            new Matrix4f(matrix).scaleAround(RubyText.RUBY_SCALE, x, yRuby, 0),
+            matrix,
             handler
         );
     }
