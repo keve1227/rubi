@@ -94,6 +94,10 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         return new RubyParseResult(result);
     }
 
+    public static String strip(String text) {
+        return Utils.charsFromOrdered(RubyText.cachedParse(Utils.orderedFrom(text))).toString();
+    }
+
     public float getWidth(TextHandler handler) {
         return Math.max(
             handler.getWidth(this.text()) * RubyText.TEXT_SCALE,
@@ -204,17 +208,21 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
     @Override
     public boolean accept(CharacterVisitor visitor) {
+        if (RubyRenderMode.getValue() == RubyRenderMode.REPLACE) {
+            return this.ruby().accept(visitor);
+        }
+
         return this.text().accept(visitor);
     }
 
-    public record RubyParseResult(Collection<OrderedText> texts) {
+    public record RubyParseResult(List<OrderedText> texts) implements OrderedText {
 
         public RubyParseResult(OrderedText text) {
             this(ImmutableList.of(text));
         }
 
         public boolean hasRuby() {
-            for (final var text : this.texts) {
+            for (final var text : this.texts()) {
                 if (text.getClass() == RubyText.class) return true;
             }
 
@@ -231,7 +239,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         ) {
             float advance = x;
 
-            for (final var text : this.texts) {
+            for (final var text : this.texts()) {
                 if (text.getClass() == RubyText.class) {
                     advance += ((RubyText) text).draw(advance, y, matrix, handler, fontHeight, drawer);
                 } else {
@@ -241,6 +249,11 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
             }
 
             return advance;
+        }
+
+        @Override
+        public boolean accept(CharacterVisitor visitor) {
+            return OrderedText.concat(this.texts()).accept(visitor);
         }
     }
 

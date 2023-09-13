@@ -8,7 +8,8 @@
         "MixinLineBreakingVisitor",
         "MixinTextHandler",
         "MixinTextRenderer",
-        "MixinTextVisitFactory"
+        "MixinTextVisitFactory",
+        "MixinStringVisitable"
     ],
     "injectors": {
         "defaultRequire": 1
