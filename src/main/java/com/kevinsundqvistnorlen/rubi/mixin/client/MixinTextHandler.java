@@ -15,17 +15,17 @@ public abstract class MixinTextHandler {
     public abstract float getWidth(OrderedText text);
 
     @Inject(method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true)
-    public void injectGetWidth(String text, CallbackInfoReturnable<Float> info) {
+    public void injectGetWidth(String text, CallbackInfoReturnable<? super Float> info) {
         info.setReturnValue(this.getWidth(Utils.orderedFrom(text)));
     }
 
     @Inject(method = "getWidth(Lnet/minecraft/text/StringVisitable;)F", at = @At("HEAD"), cancellable = true)
-    public void injectGetWidth(StringVisitable text, CallbackInfoReturnable<Float> info) {
+    public void injectGetWidth(StringVisitable text, CallbackInfoReturnable<? super Float> info) {
         info.setReturnValue(this.getWidth(Utils.orderedFrom(text)));
     }
 
     @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
-    public void injectGetWidth(OrderedText text, CallbackInfoReturnable<Float> info) {
+    public void injectGetWidth(OrderedText text, CallbackInfoReturnable<? super Float> info) {
         var parsed = RubyText.cachedParse(text);
         if (!parsed.hasRuby()) return;
 
