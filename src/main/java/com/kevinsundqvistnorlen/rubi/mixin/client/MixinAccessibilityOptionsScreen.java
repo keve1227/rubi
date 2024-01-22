@@ -16,7 +16,7 @@ public class MixinAccessibilityOptionsScreen {
     private static void injectGetOptions(CallbackInfoReturnable<SimpleOption<?>[]> info) {
         SimpleOption<?>[] options = info.getReturnValue();
         SimpleOption<?>[] newOptions = Arrays.copyOf(options, options.length + 1);
-        newOptions[options.length] = RubyRenderMode.OPTION;
+        newOptions[options.length] = RubyRenderMode.getOption();
         info.setReturnValue(newOptions);
     }
 }

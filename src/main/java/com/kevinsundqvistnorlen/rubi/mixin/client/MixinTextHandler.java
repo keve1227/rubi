@@ -29,7 +29,7 @@ public abstract class MixinTextHandler {
         var parsed = RubyText.cachedParse(text);
         if (!parsed.hasRuby()) return;
 
-        final RubyRenderMode mode = RubyRenderMode.getValue();
+        final RubyRenderMode mode = RubyRenderMode.getOption().getValue();
 
         float width = 0;
         for (final var part : parsed.texts()) {

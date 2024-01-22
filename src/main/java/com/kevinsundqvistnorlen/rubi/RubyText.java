@@ -115,7 +115,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     ) {
         float width = handler.getWidth(this);
 
-        switch (RubyRenderMode.getValue()) {
+        switch (RubyRenderMode.getOption().getValue()) {
             case ABOVE -> this.drawAbove(x, y, width, matrix, handler, fontHeight, drawer);
             case BELOW -> this.drawBelow(x, y, width, matrix, handler, fontHeight, drawer);
             case REPLACE -> this.drawReplace(x, y, matrix, drawer);
@@ -208,7 +208,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
     @Override
     public boolean accept(CharacterVisitor visitor) {
-        if (RubyRenderMode.getValue() == RubyRenderMode.REPLACE) {
+        if (RubyRenderMode.getOption().getValue() == RubyRenderMode.REPLACE) {
             return this.ruby().accept(visitor);
         }
 

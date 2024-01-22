@@ -14,41 +14,19 @@ public enum RubyRenderMode implements TranslatableOption {
     BELOW("below"),
     REPLACE("replace");
 
-    private static final MutableInt VALUE = new MutableInt(0);
-
-    public static final SimpleOption<RubyRenderMode> OPTION = new SimpleOption<>(
-        "options.rubi.renderMode",
-        SimpleOption.emptyTooltip(),
-        SimpleOption.enumValueText(),
-        new SimpleOption.PotentialValuesBasedCallbacks<>(
-            Arrays.asList(RubyRenderMode.values()),
-            Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
-        ),
-        RubyRenderMode.ABOVE,
-        (value) -> {
-            Utils.LOGGER.info("Ruby display mode changed to " + value.toString() + " (" + value.ordinal() + ")");
-            VALUE.setValue(value.ordinal());
-        }
-    );
-
     private final String translationKey;
 
     RubyRenderMode(String name) {
-        this.translationKey = "options.rubi.renderMode." + name;
-    }
-
-    public static RubyRenderMode getValue() {
-        return RubyRenderMode.byId(VALUE.getValue());
+        this.translationKey = Option.TRANSLATION_KEY + "." + name;
     }
 
     public static void accept(GameOptions.Visitor visitor) {
-        visitor.accept("rubi.renderMode", OPTION);
-        VALUE.setValue(OPTION.getValue().ordinal());
+        visitor.accept("rubi.renderMode", Option.INSTANCE);
     }
 
-    // public static void setValue(RubyDisplayMode value) {
-    //     OPTION.setValue(value);
-    // }
+    public static SimpleOption<RubyRenderMode> getOption() {
+        return Option.INSTANCE;
+    }
 
     public static RubyRenderMode byId(int id) {
         return RubyRenderMode.values()[id];
@@ -62,5 +40,22 @@ public enum RubyRenderMode implements TranslatableOption {
     @Override
     public String getTranslationKey() {
         return this.translationKey;
+    }
+
+    private static final class Option {
+        static final String TRANSLATION_KEY = "options.rubi.renderMode";
+        static final SimpleOption<RubyRenderMode> INSTANCE = new SimpleOption<>(
+            TRANSLATION_KEY,
+            SimpleOption.emptyTooltip(),
+            SimpleOption.enumValueText(),
+            new SimpleOption.PotentialValuesBasedCallbacks<>(
+                Arrays.asList(RubyRenderMode.values()),
+                Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
+            ),
+            RubyRenderMode.ABOVE,
+            (value) -> {
+                Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
+            }
+        );
     }
 }
