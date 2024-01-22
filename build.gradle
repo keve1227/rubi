@@ -33,9 +33,13 @@ loom {
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "fabricloader", project.loader_version
+    inputs.property "minecraft", project.minecraft_version
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.version,
+               "fabricloader": project.loader_version,
+               "minecraft": project.minecraft_version
     }
 }
 
