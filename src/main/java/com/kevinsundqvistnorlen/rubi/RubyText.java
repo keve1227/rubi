@@ -54,8 +54,11 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         List<Style> styles = new ArrayList<>();
 
         text.accept((index, style, codePoint) -> {
-            builder.appendCodePoint(codePoint);
-            styles.add(style);
+            for (char c : Character.toChars(codePoint)) {
+                builder.append(c);
+                styles.add(style);
+            }
+
             return true;
         });
 
