@@ -6,9 +6,9 @@ import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Math;
 import org.joml.*;
 
+import java.lang.Math;
 import java.util.*;
 import java.util.regex.Pattern;
 
