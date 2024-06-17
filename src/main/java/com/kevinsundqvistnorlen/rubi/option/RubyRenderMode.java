@@ -45,17 +45,17 @@ public enum RubyRenderMode implements TranslatableOption {
     private static final class Option {
         static final String TRANSLATION_KEY = "options.rubi.renderMode";
         static final SimpleOption<RubyRenderMode> INSTANCE = new SimpleOption<>(
-                TRANSLATION_KEY,
-                SimpleOption.emptyTooltip(),
-                SimpleOption.enumValueText(),
-                new SimpleOption.PotentialValuesBasedCallbacks<>(
-                        Arrays.asList(RubyRenderMode.values()),
-                        Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
-                ),
-                RubyRenderMode.ABOVE,
-                (value) -> {
-                    Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
-                }
+            TRANSLATION_KEY,
+            SimpleOption.emptyTooltip(),
+            SimpleOption.enumValueText(),
+            new SimpleOption.PotentialValuesBasedCallbacks<>(
+                Arrays.asList(RubyRenderMode.values()),
+                Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
+            ),
+            RubyRenderMode.ABOVE,
+            (value) -> {
+                Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
+            }
         );
     }
 }

@@ -23,109 +23,109 @@ public abstract class MixinTextRenderer {
 
     @Shadow
     public abstract int draw(
-            OrderedText text,
-            float x,
-            float y,
-            int color,
-            boolean shadow,
-            Matrix4f matrix,
-            VertexConsumerProvider vertexConsumers,
-            TextRenderer.TextLayerType layerType,
-            int backgroundColor,
-            int light
+        OrderedText text,
+        float x,
+        float y,
+        int color,
+        boolean shadow,
+        Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers,
+        TextRenderer.TextLayerType layerType,
+        int backgroundColor,
+        int light
     );
 
     @Shadow
     public abstract void drawWithOutline(
-            OrderedText text,
-            float x,
-            float y,
-            int color,
-            int outlineColor,
-            Matrix4f matrix,
-            VertexConsumerProvider vertexConsumers,
-            int light
+        OrderedText text,
+        float x,
+        float y,
+        int color,
+        int outlineColor,
+        Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers,
+        int light
     );
 
     @Redirect(
-            method = "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                    "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
-                            "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
-            )
+        method = "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
+                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
+                     "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+                     "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
+        )
     )
     public int redirectDraw(
-            TextRenderer textRenderer,
-            String text,
-            float x,
-            float y,
-            int color,
-            boolean shadow,
-            Matrix4f matrix,
-            VertexConsumerProvider vertexConsumers,
-            TextRenderer.TextLayerType layerType,
-            int backgroundColor,
-            int light,
-            boolean reverse
+        TextRenderer textRenderer,
+        String text,
+        float x,
+        float y,
+        int color,
+        boolean shadow,
+        Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers,
+        TextRenderer.TextLayerType layerType,
+        int backgroundColor,
+        int light,
+        boolean reverse
     ) {
         return this.draw(
-                Utils.orderedFrom(text),
-                x,
-                y,
-                color,
-                shadow,
-                matrix,
-                vertexConsumers,
-                layerType,
-                backgroundColor,
-                light
+            Utils.orderedFrom(text),
+            x,
+            y,
+            color,
+            shadow,
+            matrix,
+            vertexConsumers,
+            layerType,
+            backgroundColor,
+            light
         );
     }
 
     @Inject(
-            method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
-                    "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                    "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
-            at = @At("HEAD"),
-            cancellable = true
+        method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
+                 "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
+        at = @At("HEAD"),
+        cancellable = true
     )
     public void injectDraw(
-            OrderedText text,
-            float x,
-            float y,
-            int color,
-            boolean shadow,
-            Matrix4f matrix,
-            VertexConsumerProvider vertexConsumers,
-            TextRenderer.TextLayerType layerType,
-            int backgroundColor,
-            int light,
-            CallbackInfoReturnable<Integer> info
+        OrderedText text,
+        float x,
+        float y,
+        int color,
+        boolean shadow,
+        Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers,
+        TextRenderer.TextLayerType layerType,
+        int backgroundColor,
+        int light,
+        CallbackInfoReturnable<Integer> info
     ) {
         var parsed = RubyText.cachedParse(text);
 
         if (parsed.hasRuby()) {
             float advance = parsed.draw(
-                    x,
-                    y,
-                    matrix,
-                    this.handler,
-                    this.fontHeight,
-                    (t, xx, yy, m) -> this.draw(
-                            t,
-                            Math.round(xx),
-                            Math.round(yy),
-                            color,
-                            shadow,
-                            m,
-                            vertexConsumers,
-                            layerType,
-                            backgroundColor,
-                            light
-                    )
+                x,
+                y,
+                matrix,
+                this.handler,
+                this.fontHeight,
+                (t, xx, yy, m) -> this.draw(
+                    t,
+                    Math.round(xx),
+                    Math.round(yy),
+                    color,
+                    shadow,
+                    m,
+                    vertexConsumers,
+                    layerType,
+                    backgroundColor,
+                    light
+                )
             );
 
             info.setReturnValue((int) Math.ceil(advance));
@@ -134,26 +134,26 @@ public abstract class MixinTextRenderer {
 
     @Inject(method = "drawWithOutline", at = @At("HEAD"), cancellable = true)
     public void injectDrawWithOutline(
-            OrderedText text,
-            float x,
-            float y,
-            int color,
-            int outlineColor,
-            Matrix4f matrix,
-            VertexConsumerProvider vertexConsumers,
-            int light,
-            CallbackInfo info
+        OrderedText text,
+        float x,
+        float y,
+        int color,
+        int outlineColor,
+        Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers,
+        int light,
+        CallbackInfo info
     ) {
         var parsed = RubyText.cachedParse(text);
 
         if (parsed.hasRuby()) {
             parsed.draw(
-                    x,
-                    y,
-                    matrix,
-                    this.handler,
-                    this.fontHeight,
-                    (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
+                x,
+                y,
+                matrix,
+                this.handler,
+                this.fontHeight,
+                (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
 
             info.cancel();

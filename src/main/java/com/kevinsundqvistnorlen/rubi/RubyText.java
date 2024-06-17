@@ -37,7 +37,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
         try {
             return Optional.ofNullable(CACHE.computeIfAbsent(new OrderedTextKey(text), RubyText::internalParse))
-                    .orElseGet(() -> new RubyParseResult(text));
+                .orElseGet(() -> new RubyParseResult(text));
         } finally {
             while (CACHE.size() >= CACHE_MAX_SIZE) {
                 CACHE.remove(CACHE.keySet().stream().findAny().get());
@@ -86,8 +86,8 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
         if (last < builder.length()) {
             result.add(RubyText.styledChars(
-                    builder.subSequence(last, builder.length()),
-                    styles.subList(last, builder.length())
+                builder.subSequence(last, builder.length()),
+                styles.subList(last, builder.length())
             ));
         }
 
@@ -100,18 +100,18 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
     public float getWidth(TextHandler handler) {
         return Math.max(
-                handler.getWidth(this.text()) * RubyText.TEXT_SCALE,
-                handler.getWidth(this.ruby()) * RubyText.RUBY_SCALE
+            handler.getWidth(this.text()) * RubyText.TEXT_SCALE,
+            handler.getWidth(this.ruby()) * RubyText.RUBY_SCALE
         );
     }
 
     public float draw(
-            float x,
-            float y,
-            Matrix4f matrix,
-            TextHandler handler,
-            int fontHeight,
-            TextDrawer drawer
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextHandler handler,
+        int fontHeight,
+        TextDrawer drawer
     ) {
         float width = handler.getWidth(this);
 
@@ -126,43 +126,43 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     }
 
     private void drawRubyPair(
-            float x,
-            float yText,
-            float yRuby,
-            float width,
-            TextDrawer drawer,
-            TextHandler handler,
-            Matrix4f matrix
+        float x,
+        float yText,
+        float yRuby,
+        float width,
+        TextDrawer drawer,
+        TextHandler handler,
+        Matrix4f matrix
     ) {
         drawer.drawSpacedApart(
-                this.text(),
-                x,
-                yText,
-                RubyText.TEXT_SCALE,
-                width,
-                matrix,
-                handler
+            this.text(),
+            x,
+            yText,
+            RubyText.TEXT_SCALE,
+            width,
+            matrix,
+            handler
         );
 
         drawer.drawSpacedApart(
-                Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
-                x,
-                yRuby,
-                RubyText.RUBY_SCALE,
-                width,
-                matrix,
-                handler
+            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
+            x,
+            yRuby,
+            RubyText.RUBY_SCALE,
+            width,
+            matrix,
+            handler
         );
     }
 
     public void drawAbove(
-            float x,
-            float y,
-            float width,
-            Matrix4f matrix,
-            TextHandler handler,
-            int fontHeight,
-            TextDrawer drawer
+        float x,
+        float y,
+        float width,
+        Matrix4f matrix,
+        TextHandler handler,
+        int fontHeight,
+        TextDrawer drawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float rubyHeight = fontHeight * RubyText.RUBY_SCALE;
@@ -174,13 +174,13 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     }
 
     public void drawBelow(
-            float x,
-            float y,
-            float width,
-            Matrix4f matrix,
-            TextHandler handler,
-            int fontHeight,
-            TextDrawer drawer
+        float x,
+        float y,
+        float width,
+        Matrix4f matrix,
+        TextHandler handler,
+        int fontHeight,
+        TextDrawer drawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float yBelow = y + textHeight - fontHeight * RubyText.RUBY_OVERLAP;
@@ -189,19 +189,19 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     }
 
     public void drawReplace(
-            float x,
-            float y,
-            Matrix4f matrix,
-            TextDrawer drawer
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextDrawer drawer
     ) {
         drawer.draw(this.ruby(), x, y, matrix);
     }
 
     public void drawHidden(
-            float x,
-            float y,
-            Matrix4f matrix,
-            TextDrawer drawer
+        float x,
+        float y,
+        Matrix4f matrix,
+        TextDrawer drawer
     ) {
         drawer.draw(this.text(), x, y, matrix);
     }
@@ -230,12 +230,12 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         }
 
         public float draw(
-                float x,
-                float y,
-                Matrix4f matrix,
-                TextHandler handler,
-                int fontHeight,
-                TextDrawer drawer
+            float x,
+            float y,
+            Matrix4f matrix,
+            TextHandler handler,
+            int fontHeight,
+            TextDrawer drawer
         ) {
             float advance = x;
 

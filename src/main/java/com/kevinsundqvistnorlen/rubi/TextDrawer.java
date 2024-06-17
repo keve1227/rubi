@@ -10,23 +10,23 @@ public interface TextDrawer {
     void draw(OrderedText text, float x, float y, Matrix4f matrix);
 
     default void drawScaled(
-            OrderedText text,
-            float x,
-            float y,
-            float scale,
-            Matrix4f matrix
+        OrderedText text,
+        float x,
+        float y,
+        float scale,
+        Matrix4f matrix
     ) {
         this.draw(text, x, y, new Matrix4f(matrix).scaleAround(scale, x, y, 0));
     }
 
     default void drawSpacedApart(
-            OrderedText text,
-            float x,
-            float y,
-            float scale,
-            float boxWidth,
-            Matrix4f matrix,
-            TextHandler handler
+        OrderedText text,
+        float x,
+        float y,
+        float scale,
+        float boxWidth,
+        Matrix4f matrix,
+        TextHandler handler
     ) {
         float width = handler.getWidth(text) * scale;
         float gap = (boxWidth - width) / Utils.charsFromOrdered(text).length();
