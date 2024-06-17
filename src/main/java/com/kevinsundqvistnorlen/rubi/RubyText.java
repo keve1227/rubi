@@ -3,13 +3,15 @@ package com.kevinsundqvistnorlen.rubi;
 import com.google.common.collect.ImmutableList;
 import com.kevinsundqvistnorlen.rubi.option.RubyRenderMode;
 import net.minecraft.client.font.TextHandler;
-import net.minecraft.text.*;
+import net.minecraft.text.CharacterVisitor;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Style;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.jetbrains.annotations.Nullable;
-import org.joml.*;
+import org.joml.Matrix4f;
 
-import java.lang.Math;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public record RubyText(OrderedText text, OrderedText ruby) implements OrderedText {
@@ -20,7 +22,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     public static final float RUBY_OVERLAP = 0.1f;
     public static final float TEXT_SCALE = 0.8f;
 
-    private static final HashMap<OrderedTextKey, RubyParseResult> CACHE = new HashMap<>();
+    private static final ConcurrentHashMap<OrderedTextKey, RubyParseResult> CACHE = new ConcurrentHashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;
 
     private static OrderedText styledChars(CharSequence chars, Collection<? extends Style> styles) {
@@ -293,8 +295,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
 
         @Override
         public int hashCode() {
-            long hash = this.longHashCode();
-            return (int) (hash ^ (hash >>> 32));
+            return Long.hashCode(this.longHashCode());
         }
     }
 }
