@@ -25,13 +25,6 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
     private static final ConcurrentHashMap<OrderedTextKey, RubyParseResult> CACHE = new ConcurrentHashMap<>();
     private static final int CACHE_MAX_SIZE = 1_000_000;
 
-    private static OrderedText styledChars(CharSequence chars, Collection<? extends Style> styles) {
-        Queue<Style> queue = new ArrayDeque<>(styles);
-        List<OrderedText> result = new ArrayList<>();
-        chars.codePoints().forEachOrdered(codePoint -> result.add(OrderedText.styled(codePoint, queue.poll())));
-        return OrderedText.innerConcat(result);
-    }
-
     public static RubyParseResult cachedParse(OrderedText text) {
         if (text.getClass().equals(RubyText.class)) {
             return new RubyParseResult(text);
@@ -75,11 +68,11 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         while (matcher.find()) {
             var start = matcher.start();
             if (start > last) {
-                result.add(RubyText.styledChars(builder.subSequence(last, start), styles.subList(last, start)));
+                result.add(Utils.orderedFrom(builder.subSequence(last, start), styles.subList(last, start)));
             }
 
-            var body = RubyText.styledChars(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
-            var ruby = RubyText.styledChars(matcher.group(2), styles.subList(matcher.start(2), matcher.end(2)));
+            var body = Utils.orderedFrom(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
+            var ruby = Utils.orderedFrom(matcher.group(2), styles.subList(matcher.start(2), matcher.end(2)));
             result.add(new RubyText(body, ruby));
 
             last = matcher.end();
@@ -90,7 +83,7 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         }
 
         if (last < builder.length()) {
-            result.add(RubyText.styledChars(
+            result.add(Utils.orderedFrom(
                 builder.subSequence(last, builder.length()),
                 styles.subList(last, builder.length())
             ));
