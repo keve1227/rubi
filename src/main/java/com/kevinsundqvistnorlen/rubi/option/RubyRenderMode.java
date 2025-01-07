@@ -4,7 +4,6 @@ import com.kevinsundqvistnorlen.rubi.Utils;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.option.*;
 import net.minecraft.util.TranslatableOption;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.Arrays;
 
