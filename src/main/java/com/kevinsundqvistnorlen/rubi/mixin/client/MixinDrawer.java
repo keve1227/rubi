@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-@Pseudo
 @Mixin(targets = "net/minecraft/client/font/TextRenderer$Drawer")
 public abstract class MixinDrawer {
 

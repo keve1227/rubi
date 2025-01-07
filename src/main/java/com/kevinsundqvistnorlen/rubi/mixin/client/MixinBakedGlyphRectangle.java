@@ -1,13 +1,12 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
 
 import com.kevinsundqvistnorlen.rubi.HasMatrixProp;
+import net.minecraft.client.font.BakedGlyph;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 
-@Pseudo
-@Mixin(targets = "net/minecraft/client/font/BakedGlyph$Rectangle")
+@Mixin(BakedGlyph.Rectangle.class)
 public class MixinBakedGlyphRectangle implements HasMatrixProp {
     @Unique
     private Matrix4f matrix;
