@@ -3,15 +3,13 @@
     "package": "com.kevinsundqvistnorlen.rubi.mixin.client",
     "compatibilityLevel": "JAVA_17",
     "client": [
-        "MixinAccessibilityOptionsScreen",
-        "MixinGameOptions",
-        "MixinLineBreakingVisitor",
-        "MixinTextHandler",
-        "MixinTextRenderer",
-        "MixinTextVisitFactory",
-        "MixinStringVisitable"
+        "MixinAccessibilityOptionsScreen", "MixinBakedGlyphRectangle", "MixinDrawnGlyph", "MixinGameOptions",
+        "MixinStyle", "MixinTextHandler", "MixinTextVisitFactory"
     ],
     "injectors": {
         "defaultRequire": 1
-    }
+    },
+    "mixins": [
+        "MixinDrawer"
+    ]
 }
