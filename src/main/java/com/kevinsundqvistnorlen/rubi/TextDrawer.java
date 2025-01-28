@@ -31,7 +31,7 @@ public interface TextDrawer {
         TextHandler handler
     ) {
         float width = handler.getWidth(text) * scale;
-        float gap = (boxWidth - width) / Utils.charsFromOrdered(text).length();
+        float gap = (boxWidth - width) / Utils.lengthOfOrdered(text);
 
         var xx = new MutableFloat(x + gap / 2);
         text.accept((index, style, codePoint) -> {
@@ -52,37 +52,21 @@ public interface TextDrawer {
         TextDrawer drawer
     ) {
         final var advance = new MutableFloat(x);
-        text.accept((index, style, codePoint) -> {
-            if (codePoint == RubyText.RUBY_MARKER) {
-                advance.add((int) Math.ceil(((IRubyStyle) style).getRuby().draw(
-                    advance.getValue(),
-                    y,
-                    matrix,
-                    style,
-                    handler,
-                    fontHeight,
-                    drawer
-                )));
-                return true;
-            }
-            // TODO: Group together into one OrderedText
-            var character = OrderedText.styled(codePoint, style);
-            drawer.draw(character, advance.getAndAdd((int) handler.getWidth(character)), y, matrix);
-            return true;
-        });
+
+        Utils.splitWithDelimitersOrderedText(text, RubyText.RUBY_MARKER, orderedText -> {
+            drawer.draw(orderedText, advance.getAndAdd((int) handler.getWidth(orderedText)), y, matrix);
+        }, orderedText ->
+            advance.add(RubyText.draw(
+                orderedText,
+                advance.getValue(),
+                y,
+                matrix,
+                handler,
+                fontHeight,
+                drawer
+            ))
+        );
 
         return advance.getValue().intValue();
-    }
-
-    static int draw(
-        String text,
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextHandler handler,
-        int fontHeight,
-        TextDrawer drawer
-    ) {
-        return 0;
     }
 }
