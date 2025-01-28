@@ -16,12 +16,23 @@ import java.util.regex.Pattern;
 public record RubyText(String text, String ruby) {
 
     public static final Pattern RUBY_PATTERN = Pattern.compile("\\^\\s*(.+?)\\s*\\(\\s*(.+?)\\s*\\)");
+    public static final Pattern RUBY_PATTERN_FOR_STRIPPING = Pattern.compile("§\\^\\s*(.+?)\\s*\\(\\s*(.+?)\\s*\\)");
 
     public static final char RUBY_MARKER = '\uFFFC';//'\ue9c0';
 
     public static final float RUBY_SCALE = 0.5f;
     public static final float RUBY_OVERLAP = 0.1f;
     public static final float TEXT_SCALE = 0.8f;
+
+    public static String strip(String returnValue) {
+        StringBuilder sb = new StringBuilder(returnValue.length());
+        var matcher = RUBY_PATTERN_FOR_STRIPPING.matcher(returnValue);
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, matcher.group(1));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
 
     public float getWidth(ITextHandler textHandler, Style style) {
         var mode = RubyRenderMode.getOption().getValue();
@@ -128,7 +139,7 @@ public record RubyText(String text, String ruby) {
         );
 
         drawer.drawSpacedApart(
-            OrderedText.styledForwardsVisitedString(this.ruby(), style),
+            OrderedText.styledForwardsVisitedString(this.ruby(), style.withUnderline(false).withStrikethrough(false)),
             x,
             yRuby,
             RubyText.RUBY_SCALE,
