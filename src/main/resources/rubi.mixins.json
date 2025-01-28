@@ -5,6 +5,7 @@
   "client": [
     "MixinAccessibilityOptionsScreen",
     "MixinGameOptions",
+    "MixinStringVisitable",
     "MixinStyle",
     "MixinTextHandler",
     "MixinTextRenderer",
