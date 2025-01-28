@@ -1,11 +1,11 @@
 package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.text.*;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.slf4j.*;
 
-import java.util.*;
-import java.util.function.UnaryOperator;
+import java.util.function.Consumer;
 
 public final class Utils {
 
@@ -18,29 +18,32 @@ public final class Utils {
         return visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
     }
 
-    public static OrderedText orderedFrom(StringVisitable text) {
-        return visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
-    }
-
-    public static OrderedText orderedFrom(CharSequence chars, Collection<? extends Style> styles) {
-        Queue<Style> queue = new ArrayDeque<>(styles);
-        List<OrderedText> result = new ArrayList<>();
-        chars.codePoints().forEachOrdered(codePoint -> result.add(OrderedText.styled(codePoint, queue.poll())));
-        return OrderedText.innerConcat(result);
-    }
-
-    public static OrderedText styleOrdered(@NotNull OrderedText text, UnaryOperator<Style> stylizer) {
-        return visitor -> text.accept((index, style, codePoint) -> {
-            return visitor.accept(index, stylizer.apply(style), codePoint);
-        });
-    }
-
-    public static CharSequence charsFromOrdered(OrderedText text) {
-        StringBuilder builder = new StringBuilder();
+    public static int lengthOfOrdered(OrderedText text) {
+        MutableInt length = new MutableInt();
         text.accept((index, style, codePoint) -> {
-            builder.appendCodePoint(codePoint);
+            length.increment();
             return true;
         });
-        return builder;
+        return length.getValue();
+    }
+
+    public static void splitWithDelimitersOrderedText(
+        OrderedText text,
+        int splitCodePoint,
+        Consumer<OrderedText> splitConsumer,
+        Consumer<OrderedText> delimiterConsumer
+    ) {
+        MutableObject<OrderedText> current = new MutableObject<>(OrderedText.EMPTY);
+        text.accept((index, style, codePoint) -> {
+            if (codePoint == splitCodePoint) {
+                splitConsumer.accept(current.getValue());
+                current.setValue(OrderedText.EMPTY);
+                delimiterConsumer.accept(OrderedText.styled(codePoint, style));
+                return true;
+            }
+            current.setValue(OrderedText.innerConcat(current.getValue(), OrderedText.styled(codePoint, style)));
+            return true;
+        });
+        splitConsumer.accept(current.getValue());
     }
 }

@@ -108,6 +108,13 @@ public abstract class MixinStyle implements IRubyStyle {
         return result;
     }
 
+    @Inject(method = "withParent", at = @At("RETURN"))
+    public void onWithParent(Style parent, CallbackInfoReturnable<Style> cir) {
+        if (cir.getReturnValue() == parent) return;
+        if (((IRubyStyle) parent).getRuby() == null) return;
+        ((MixinStyle) (Object) cir.getReturnValue()).ruby = ((MixinStyle) (Object) parent).ruby;
+    }
+
     @Inject(method = "equals", at = @At("RETURN"), cancellable = true)
     public void onEquals(Object o, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) cir.setReturnValue(Objects.equals(this.getRuby(), ((IRubyStyle) o).getRuby()));
