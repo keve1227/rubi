@@ -1,5 +1,6 @@
 package com.kevinsundqvistnorlen.rubi;
 
+import com.kevinsundqvistnorlen.rubi.option.ITextHandler;
 import com.kevinsundqvistnorlen.rubi.option.RubyRenderMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.OrderedText;
@@ -21,6 +22,22 @@ public record RubyText(String text, String ruby) {
     public static final float RUBY_SCALE = 0.5f;
     public static final float RUBY_OVERLAP = 0.1f;
     public static final float TEXT_SCALE = 0.8f;
+
+    public float getWidth(ITextHandler textHandler, Style style) {
+        var mode = RubyRenderMode.getOption().getValue();
+        float baseWidth = 0f,
+              rubyWidth = 0f;
+        if (mode != RubyRenderMode.REPLACE) baseWidth = textHandler.getWidth(OrderedText.styledForwardsVisitedString(this.text(), style));
+        if (mode != RubyRenderMode.HIDDEN) rubyWidth = textHandler.getWidth(OrderedText.styledForwardsVisitedString(this.ruby(), style));
+        return switch (mode) {
+            case ABOVE, BELOW -> Math.max(
+                baseWidth * RubyText.TEXT_SCALE,
+                rubyWidth * RubyText.RUBY_SCALE
+            );
+            case HIDDEN -> baseWidth;
+            case REPLACE -> rubyWidth;
+        };
+    }
 
     public float getWidth(TextHandler.WidthRetriever widthRetriever, Style style) {
         var mode = RubyRenderMode.getOption().getValue();
