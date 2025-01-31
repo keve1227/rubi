@@ -21,17 +21,17 @@ public abstract class MixinTextHandler implements ITextHandler {
     @Shadow
     public float getWidth(OrderedText text) { return 0f; }
 
-    @Inject(method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true, order = 900)
     public void injectGetWidth(String text, CallbackInfoReturnable<Float> info) {
         onGetWidthOrderedText(Utils.orderedFrom(text), info);
     }
 
-    @Inject(method = "getWidth(Lnet/minecraft/text/StringVisitable;)F", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getWidth(Lnet/minecraft/text/StringVisitable;)F", at = @At("HEAD"), cancellable = true, order = 900)
     public void injectGetWidth(StringVisitable text, CallbackInfoReturnable<Float> info) {
         onGetWidthOrderedText(Utils.orderedFrom(text), info);
     }
 
-    @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true, order = 900)
     private void onGetWidthOrderedText(OrderedText text, CallbackInfoReturnable<Float> cir) {
         if (!getWidthMutex) {
             getWidthMutex = true;
