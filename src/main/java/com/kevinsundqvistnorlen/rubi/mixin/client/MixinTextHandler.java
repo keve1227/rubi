@@ -4,6 +4,7 @@ import com.kevinsundqvistnorlen.rubi.*;
 import com.kevinsundqvistnorlen.rubi.option.ITextHandler;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Style;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -19,6 +20,16 @@ public abstract class MixinTextHandler implements ITextHandler {
 
     @Shadow
     public float getWidth(OrderedText text) { return 0f; }
+
+    @Inject(method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true)
+    public void injectGetWidth(String text, CallbackInfoReturnable<Float> info) {
+        onGetWidthOrderedText(Utils.orderedFrom(text), info);
+    }
+
+    @Inject(method = "getWidth(Lnet/minecraft/text/StringVisitable;)F", at = @At("HEAD"), cancellable = true)
+    public void injectGetWidth(StringVisitable text, CallbackInfoReturnable<Float> info) {
+        onGetWidthOrderedText(Utils.orderedFrom(text), info);
+    }
 
     @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true)
     private void onGetWidthOrderedText(OrderedText text, CallbackInfoReturnable<Float> cir) {

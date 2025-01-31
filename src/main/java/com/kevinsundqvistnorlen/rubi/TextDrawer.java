@@ -5,6 +5,8 @@ import net.minecraft.text.OrderedText;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.joml.*;
 
+import java.lang.Math;
+
 @FunctionalInterface
 public interface TextDrawer {
     void draw(OrderedText text, float x, float y, Matrix4f matrix);
@@ -65,6 +67,6 @@ public interface TextDrawer {
             ))
         );
 
-        return advance.getValue().intValue();
+        return (int) Math.ceil(advance.getValue());
     }
 }

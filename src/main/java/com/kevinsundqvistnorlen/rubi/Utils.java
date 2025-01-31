@@ -18,6 +18,10 @@ public final class Utils {
         return visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
     }
 
+    public static OrderedText orderedFrom(StringVisitable text) {
+        return visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor);
+    }
+
     public static int lengthOfOrdered(OrderedText text) {
         MutableInt length = new MutableInt();
         text.accept((index, style, codePoint) -> {
