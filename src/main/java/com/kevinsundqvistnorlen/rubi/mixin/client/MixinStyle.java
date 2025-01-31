@@ -24,6 +24,9 @@ public abstract class MixinStyle implements IRubyStyle {
     TextColor color;
     @Final
     @Shadow
+    Integer shadowColor;
+    @Final
+    @Shadow
     Boolean bold;
     @Final
     @Shadow
@@ -56,6 +59,7 @@ public abstract class MixinStyle implements IRubyStyle {
     @Invoker("<init>")
     private static Style invokeConstructor(
         @Nullable TextColor color,
+        @Nullable Integer shadowColor,
         @Nullable Boolean bold,
         @Nullable Boolean italic,
         @Nullable Boolean underlined,
@@ -70,6 +74,7 @@ public abstract class MixinStyle implements IRubyStyle {
     @Shadow
     private static Style of(
         Optional<TextColor> color,
+        Optional<Integer> shadowColor,
         Optional<Boolean> bold,
         Optional<Boolean> italic,
         Optional<Boolean> underlined,
@@ -86,6 +91,7 @@ public abstract class MixinStyle implements IRubyStyle {
         var newRuby = new RubyText(word, ruby);
         var result = invokeConstructor(
             this.color,
+            this.shadowColor,
             this.bold,
             this.italic,
             this.underlined,
@@ -109,6 +115,7 @@ public abstract class MixinStyle implements IRubyStyle {
     public Style removeRuby() {
         return of(
             Optional.ofNullable(this.color),
+            Optional.ofNullable(this.shadowColor),
             Optional.ofNullable(this.bold),
             Optional.ofNullable(this.italic),
             Optional.ofNullable(this.underlined),
