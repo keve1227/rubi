@@ -3,18 +3,17 @@ package com.kevinsundqvistnorlen.rubi.mixin.client;
 import com.kevinsundqvistnorlen.rubi.IRubyStyle;
 import com.kevinsundqvistnorlen.rubi.RubyText;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextVisitFactory;
+import net.minecraft.text.*;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextVisitFactory.class)
 public class MixinTextVisitFactory {
-
     @Inject(
-        method = "visitFormatted(Ljava/lang/String;ILnet/minecraft/text/Style;Lnet/minecraft/text/Style;Lnet/minecraft/text/CharacterVisitor;)Z",
+        method = "visitFormatted(Ljava/lang/String;ILnet/minecraft/text/Style;Lnet/minecraft/text/Style;" +
+            "Lnet/minecraft/text/CharacterVisitor;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Formatting;byCode(C)Lnet/minecraft/util/Formatting;"),
         cancellable = true
     )
@@ -34,8 +33,7 @@ public class MixinTextVisitFactory {
             if (matcher.find(index)) {
                 final var word = matcher.group(1);
                 final var ruby = matcher.group(2);
-                final IRubyStyle s = (IRubyStyle) style;
-                if (!visitor.accept(index, s.withRuby(word, ruby), RubyText.RUBY_MARKER)) {
+                if (!visitor.accept(index, ((IRubyStyle) style).rubi$withRuby(word, ruby), '￼')) {
                     cir.setReturnValue(false);
                     return;
                 }
@@ -44,5 +42,4 @@ public class MixinTextVisitFactory {
             }
         }
     }
-
 }

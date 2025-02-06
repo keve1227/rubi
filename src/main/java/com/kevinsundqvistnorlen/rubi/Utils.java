@@ -2,13 +2,10 @@ package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.slf4j.*;
-
-import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Utils {
-
     public static final Logger LOGGER = LoggerFactory.getLogger("Rubi");
 
     public static OrderedText orderedFrom(String text) {
@@ -29,25 +26,5 @@ public final class Utils {
             return true;
         });
         return length.getValue();
-    }
-
-    public static void splitWithDelimitersOrderedText(
-        OrderedText text,
-        int splitCodePoint,
-        Consumer<OrderedText> splitConsumer,
-        Consumer<OrderedText> delimiterConsumer
-    ) {
-        MutableObject<OrderedText> current = new MutableObject<>(OrderedText.EMPTY);
-        text.accept((index, style, codePoint) -> {
-            if (codePoint == splitCodePoint) {
-                splitConsumer.accept(current.getValue());
-                current.setValue(OrderedText.EMPTY);
-                delimiterConsumer.accept(OrderedText.styled(codePoint, style));
-                return true;
-            }
-            current.setValue(OrderedText.innerConcat(current.getValue(), OrderedText.styled(codePoint, style)));
-            return true;
-        });
-        splitConsumer.accept(current.getValue());
     }
 }

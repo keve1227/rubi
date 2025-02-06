@@ -1,28 +1,23 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
 
-import com.kevinsundqvistnorlen.rubi.*;
-import net.minecraft.client.font.*;
+import com.kevinsundqvistnorlen.rubi.TextDrawer;
+import com.kevinsundqvistnorlen.rubi.Utils;
+import net.minecraft.client.font.TextHandler;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.OrderedText;
 import org.joml.Math;
-import org.joml.*;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer {
-
-    @Final
-    @Shadow
-    public int fontHeight;
-
-    @Final
-    @Shadow
-    private TextHandler handler;
-
-    @Unique
-    private boolean isSeparatingDrawCall = false;
+    @Final @Shadow public int fontHeight;
+    @Final @Shadow private TextHandler handler;
+    @Unique private boolean isSeparatingDrawCall = false;
 
     @Shadow
     public abstract int draw(
@@ -52,13 +47,12 @@ public abstract class MixinTextRenderer {
 
     @Redirect(
         method = "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
-            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
-                "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
-        )
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
+            "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
+    )
     )
     public int redirectDraw(
         TextRenderer textRenderer,
@@ -91,9 +85,7 @@ public abstract class MixinTextRenderer {
     @Inject(
         method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
             "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
-        at = @At("HEAD"),
-        cancellable = true
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I", at = @At("HEAD"), cancellable = true
     )
     public void injectDraw(
         OrderedText text,
@@ -108,16 +100,10 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfoReturnable<Integer> info
     ) {
-        if (!isSeparatingDrawCall) {
-            isSeparatingDrawCall = true;
-            int advance = TextDrawer.draw(
-                text,
-                x,
-                y,
-                matrix,
-                this.handler,
-                this.fontHeight,
-                (t, xx, yy, m) -> this.draw(
+        if (!this.isSeparatingDrawCall) {
+            this.isSeparatingDrawCall = true;
+            int advance =
+                TextDrawer.draw(text, x, y, matrix, this.handler, this.fontHeight, (t, xx, yy, m) -> this.draw(
                     t,
                     Math.round(xx),
                     Math.round(yy),
@@ -128,9 +114,8 @@ public abstract class MixinTextRenderer {
                     layerType,
                     backgroundColor,
                     light
-                )
-            );
-            isSeparatingDrawCall = false;
+                ));
+            this.isSeparatingDrawCall = false;
             info.setReturnValue(advance);
         }
     }
@@ -147,8 +132,8 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfo info
     ) {
-        if (!isSeparatingDrawCall) {
-            isSeparatingDrawCall = true;
+        if (!this.isSeparatingDrawCall) {
+            this.isSeparatingDrawCall = true;
             TextDrawer.draw(
                 text,
                 x,
@@ -159,7 +144,7 @@ public abstract class MixinTextRenderer {
                 (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
             info.cancel();
-            isSeparatingDrawCall = false;
+            this.isSeparatingDrawCall = false;
         }
     }
 }
