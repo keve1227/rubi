@@ -49,17 +49,18 @@ public record RubyText(String text, String ruby, Style style) {
 
     public float getWidth(TextHandler.WidthRetriever widthRetriever) {
         final var mode = RubyRenderMode.getOption().getValue();
+        final var style = ((IRubyStyle) this.style).rubi$removeRuby();
         MutableFloat baseWidth = new MutableFloat(), rubyWidth = new MutableFloat();
 
         if (mode != RubyRenderMode.REPLACE) {
-            TextVisitFactory.visitForwards(this.text(), this.style, (unused, s, codePoint) -> {
+            TextVisitFactory.visitForwards(this.text, style, (unused, s, codePoint) -> {
                 baseWidth.add(widthRetriever.getWidth(codePoint, s));
                 return true;
             });
         }
 
         if (mode != RubyRenderMode.HIDDEN) {
-            TextVisitFactory.visitForwards(this.ruby(), this.style, (unused, s, codePoint) -> {
+            TextVisitFactory.visitForwards(this.ruby, style, (unused, s, codePoint) -> {
                 rubyWidth.add(widthRetriever.getWidth(codePoint, s));
                 return true;
             });
