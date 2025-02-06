@@ -16,42 +16,17 @@ import java.util.Optional;
 
 @Mixin(Style.class)
 public abstract class MixinStyle implements IRubyStyle {
-
-    @Shadow
-    public abstract boolean equals(Object o);
-    @Final
-    @Shadow
-    TextColor color;
-    @Final
-    @Shadow
-    Boolean bold;
-    @Final
-    @Shadow
-    Boolean italic;
-    @Final
-    @Shadow
-    Boolean underlined;
-    @Final
-    @Shadow
-    Boolean strikethrough;
-    @Final
-    @Shadow
-    Boolean obfuscated;
-    @Final
-    @Shadow
-    ClickEvent clickEvent;
-    @Final
-    @Shadow
-    HoverEvent hoverEvent;
-    @Final
-    @Shadow
-    String insertion;
-    @Final
-    @Shadow
-    Identifier font;
-
-    @Unique
-    private @Nullable RubyText ruby;
+    @Final @Shadow TextColor color;
+    @Final @Shadow Boolean bold;
+    @Final @Shadow Boolean italic;
+    @Final @Shadow Boolean underlined;
+    @Final @Shadow Boolean strikethrough;
+    @Final @Shadow Boolean obfuscated;
+    @Final @Shadow ClickEvent clickEvent;
+    @Final @Shadow HoverEvent hoverEvent;
+    @Final @Shadow String insertion;
+    @Final @Shadow Identifier font;
+    @Unique private @Nullable RubyText ruby;
 
     @Invoker("<init>")
     private static Style invokeConstructor(
@@ -65,7 +40,9 @@ public abstract class MixinStyle implements IRubyStyle {
         @Nullable HoverEvent hoverEvent,
         @Nullable String insertion,
         @Nullable Identifier font
-    ) {return null;}
+    ) {
+        return null;
+    }
 
     @Shadow
     private static Style of(
@@ -79,12 +56,17 @@ public abstract class MixinStyle implements IRubyStyle {
         Optional<HoverEvent> hoverEvent,
         Optional<String> insertion,
         Optional<Identifier> font
-    ) {return Style.EMPTY;}
+    ) {
+        return Style.EMPTY;
+    }
+
+    @Shadow
+    public abstract boolean equals(Object o);
 
     @Override
     public Style withRuby(String word, String ruby) {
         var newRuby = new RubyText(word, ruby);
-        var result = invokeConstructor(
+        var result = MixinStyle.invokeConstructor(
             this.color,
             this.bold,
             this.italic,
@@ -107,7 +89,7 @@ public abstract class MixinStyle implements IRubyStyle {
 
     @Override
     public Style removeRuby() {
-        return of(
+        return MixinStyle.of(
             Optional.ofNullable(this.color),
             Optional.ofNullable(this.bold),
             Optional.ofNullable(this.italic),
@@ -130,7 +112,9 @@ public abstract class MixinStyle implements IRubyStyle {
 
     @Inject(method = "equals", at = @At("RETURN"), cancellable = true)
     public void onEquals(Object o, CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValue()) cir.setReturnValue(Objects.equals(this.getRuby(), ((IRubyStyle) o).getRuby()));
+        if (cir.getReturnValue()) {
+            cir.setReturnValue(Objects.equals(this.getRuby(), ((IRubyStyle) o).getRuby()));
+        }
     }
 
     @Inject(method = "hashCode", at = @At("RETURN"), cancellable = true)
