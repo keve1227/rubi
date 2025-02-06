@@ -33,8 +33,7 @@ public class MixinTextVisitFactory {
             if (matcher.find(index)) {
                 final var word = matcher.group(1);
                 final var ruby = matcher.group(2);
-                final IRubyStyle s = (IRubyStyle) style;
-                if (!visitor.accept(index, s.withRuby(word, ruby), RubyText.RUBY_MARKER)) {
+                if (!visitor.accept(index, ((IRubyStyle) style).rubi$withRuby(word, ruby), '￼')) {
                     cir.setReturnValue(false);
                     return;
                 }
