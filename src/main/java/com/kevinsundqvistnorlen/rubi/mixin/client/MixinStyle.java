@@ -4,6 +4,7 @@ import com.kevinsundqvistnorlen.rubi.IRubyStyle;
 import com.kevinsundqvistnorlen.rubi.RubyText;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -29,7 +30,7 @@ public abstract class MixinStyle implements IRubyStyle {
     @Unique private @Nullable RubyText ruby;
 
     @Invoker("<init>")
-    private static Style invokeConstructor(
+    private static @NotNull Style invokeConstructor(
         @Nullable TextColor color,
         @Nullable Boolean bold,
         @Nullable Boolean italic,
@@ -41,7 +42,7 @@ public abstract class MixinStyle implements IRubyStyle {
         @Nullable String insertion,
         @Nullable Identifier font
     ) {
-        return null;
+        return Style.EMPTY;
     }
 
     @Shadow
@@ -64,8 +65,7 @@ public abstract class MixinStyle implements IRubyStyle {
     public abstract boolean equals(Object o);
 
     @Override
-    public Style withRuby(String word, String ruby) {
-        var newRuby = new RubyText(word, ruby);
+    public Style rubi$withRuby(String word, String ruby) {
         var result = MixinStyle.invokeConstructor(
             this.color,
             this.bold,
@@ -78,17 +78,22 @@ public abstract class MixinStyle implements IRubyStyle {
             this.insertion,
             this.font
         );
-        ((MixinStyle) (Object) result).ruby = newRuby;
+        ((MixinStyle) (Object) result).setRuby(new RubyText(word, ruby, result));
         return result;
     }
 
     @Override
-    public @Nullable RubyText getRuby() {
+    public @Nullable RubyText rubi$getRuby() {
         return this.ruby;
     }
 
+    @Unique
+    private void setRuby(@Nullable RubyText ruby) {
+        this.ruby = ruby;
+    }
+
     @Override
-    public Style removeRuby() {
+    public Style rubi$removeRuby() {
         return MixinStyle.of(
             Optional.ofNullable(this.color),
             Optional.ofNullable(this.bold),
@@ -106,14 +111,14 @@ public abstract class MixinStyle implements IRubyStyle {
     @Inject(method = "withParent", at = @At("RETURN"))
     public void onWithParent(Style parent, CallbackInfoReturnable<Style> cir) {
         if (cir.getReturnValue() == parent) return;
-        if (((IRubyStyle) parent).getRuby() == null) return;
-        ((MixinStyle) (Object) cir.getReturnValue()).ruby = ((MixinStyle) (Object) parent).ruby;
+        if (IRubyStyle.getRuby(parent).isEmpty()) return;
+        ((MixinStyle) (Object) cir.getReturnValue()).setRuby(((IRubyStyle) parent).rubi$getRuby());
     }
 
     @Inject(method = "equals", at = @At("RETURN"), cancellable = true)
     public void onEquals(Object o, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) {
-            cir.setReturnValue(Objects.equals(this.getRuby(), ((IRubyStyle) o).getRuby()));
+            cir.setReturnValue(Objects.equals(this.ruby, ((IRubyStyle) o).rubi$getRuby()));
         }
     }
 

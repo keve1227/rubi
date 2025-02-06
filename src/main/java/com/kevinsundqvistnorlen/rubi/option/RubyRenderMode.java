@@ -54,10 +54,9 @@ public enum RubyRenderMode implements TranslatableOption {
                     Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
                 ),
                 RubyRenderMode.ABOVE,
-                (value) -> {
+                (value) ->
                     Utils.LOGGER.debug(
-                        "Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
-                }
+                        "Ruby display mode changed to {} ({})", value.toString(), value.ordinal())
             );
     }
 }

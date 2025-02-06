@@ -2,12 +2,14 @@ package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.text.Style;
 
+import java.util.Optional;
+
 public interface IRubyStyle {
-    static RubyText getRuby(Style style) {
-        return ((IRubyStyle) style).getRuby();
+    static Optional<RubyText> getRuby(Style style) {
+        return Optional.ofNullable(((IRubyStyle) style).rubi$getRuby());
     }
 
-    Style withRuby(String word, String ruby);
-    RubyText getRuby();
-    Style removeRuby();
+    Style rubi$withRuby(String word, String ruby);
+    RubyText rubi$getRuby();
+    Style rubi$removeRuby();
 }

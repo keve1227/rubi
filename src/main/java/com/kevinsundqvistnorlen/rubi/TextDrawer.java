@@ -11,23 +11,31 @@ public interface TextDrawer {
         OrderedText text, float x, float y, Matrix4f matrix, TextHandler handler, int fontHeight, TextDrawer drawer
     ) {
         final var advance = new MutableFloat(x);
-
-        Utils.splitWithDelimitersOrderedText(
-            text,
-            RubyText.RUBY_MARKER,
-            orderedText -> {
-                drawer.draw(orderedText, advance.getAndAdd((int) handler.getWidth(orderedText)), y, matrix);
-            },
-            orderedText -> advance.add(RubyText.draw(
-                orderedText,
-                advance.getValue(),
-                y,
-                matrix,
-                handler,
-                fontHeight,
-                drawer
-            ))
-        );
+        text.accept((index, style, codePoint) -> {
+            IRubyStyle
+                .getRuby(style)
+                .ifPresentOrElse(
+                    (rubyText) ->
+                        advance.add(rubyText.draw(
+                            advance.getValue(),
+                            y,
+                            matrix,
+                            handler,
+                            fontHeight,
+                            drawer
+                        )),
+                    () -> {
+                        var styledChar = OrderedText.styled(codePoint, style);
+                        drawer.draw(
+                            styledChar,
+                            advance.getAndAdd((int) handler.getWidth(styledChar)),
+                            y,
+                            matrix
+                        );
+                    }
+                );
+            return true;
+        });
 
         return (int) Math.ceil(advance.getValue());
     }
@@ -46,9 +54,9 @@ public interface TextDrawer {
 
         var xx = new MutableFloat(x + gap / 2);
         text.accept((index, style, codePoint) -> {
-            var styled = OrderedText.styled(codePoint, style);
-            this.drawScaled(styled, xx.floatValue(), y, scale, matrix);
-            xx.add(handler.getWidth(styled) * scale + gap);
+            var styledChar = OrderedText.styled(codePoint, style);
+            this.drawScaled(styledChar, xx.floatValue(), y, scale, matrix);
+            xx.add(handler.getWidth(styledChar) * scale + gap);
             return true;
         });
     }
