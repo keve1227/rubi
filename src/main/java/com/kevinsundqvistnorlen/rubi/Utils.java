@@ -3,12 +3,12 @@ package com.kevinsundqvistnorlen.rubi;
 import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
 public final class Utils {
-
     public static final Logger LOGGER = LoggerFactory.getLogger("Rubi");
 
     public static OrderedText orderedFrom(String text) {
