@@ -121,7 +121,7 @@ public abstract class MixinTextRenderer {
                         light
                     )
                 );
-            cir.setReturnValue((int) Math.ceil(x));
+            cir.setReturnValue((int) Math.ceil(x) + (shadow ? 1 : 0));
         } finally {
             this.recursionGuard.set(false);
         }
