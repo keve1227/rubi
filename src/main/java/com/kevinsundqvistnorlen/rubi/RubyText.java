@@ -3,7 +3,6 @@ package com.kevinsundqvistnorlen.rubi;
 import com.kevinsundqvistnorlen.rubi.option.RubyRenderMode;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.*;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.joml.Matrix4f;
 
 import java.util.Objects;
@@ -31,59 +30,56 @@ public record RubyText(String text, String ruby, Style style) {
         float x,
         float y,
         Matrix4f matrix,
-        TextHandler handler,
+        TextHandler textHandler,
         int fontHeight,
-        TextDrawer drawer
+        TextDrawer textDrawer
     ) {
-        float width = handler.getWidth(OrderedText.styled('￼', this.style));
+        float width = this.getWidth(textHandler);
 
         switch (RubyRenderMode.getOption().getValue()) {
-            case ABOVE -> this.drawAbove(x, y, width, matrix, handler, fontHeight, drawer);
-            case BELOW -> this.drawBelow(x, y, width, matrix, handler, fontHeight, drawer);
-            case REPLACE -> this.drawReplace(x, y, matrix, drawer);
-            case HIDDEN -> this.drawHidden(x, y, matrix, drawer);
+            case ABOVE -> this.drawAbove(x, y, width, matrix, textHandler, fontHeight, textDrawer);
+            case BELOW -> this.drawBelow(x, y, width, matrix, textHandler, fontHeight, textDrawer);
+            case REPLACE -> this.drawReplace(x, y, matrix, textDrawer);
+            case HIDDEN -> this.drawHidden(x, y, matrix, textDrawer);
         }
 
         return width;
     }
 
-    public float getWidth(TextHandler.WidthRetriever widthRetriever) {
+    public float getWidth(TextHandler textHandler) {
         final var mode = RubyRenderMode.getOption().getValue();
-        final var style = ((IRubyStyle) this.style).rubi$removeRuby();
-        MutableFloat baseWidth = new MutableFloat(), rubyWidth = new MutableFloat();
+        float baseWidth = 0f, rubyWidth = 0f;
 
         if (mode != RubyRenderMode.REPLACE) {
-            TextVisitFactory.visitForwards(this.text, style, (unused, s, codePoint) -> {
-                baseWidth.add(widthRetriever.getWidth(codePoint, s));
-                return true;
-            });
+            baseWidth += textHandler.getWidth(StringVisitable.styled(this.text(), this.style()));
         }
 
         if (mode != RubyRenderMode.HIDDEN) {
-            TextVisitFactory.visitForwards(this.ruby, style, (unused, s, codePoint) -> {
-                rubyWidth.add(widthRetriever.getWidth(codePoint, s));
-                return true;
-            });
+            rubyWidth += textHandler.getWidth(StringVisitable.styled(
+                this.ruby(),
+                this.style().withUnderline(false).withStrikethrough(false)
+            ));
         }
 
         return switch (mode) {
-            case ABOVE, BELOW ->
-                Math.max(baseWidth.getValue() * RubyText.TEXT_SCALE, rubyWidth.getValue() * RubyText.RUBY_SCALE);
-            case HIDDEN -> baseWidth.getValue();
-            case REPLACE -> rubyWidth.getValue();
+            case ABOVE, BELOW -> Math.max(baseWidth * RubyText.TEXT_SCALE, rubyWidth * RubyText.RUBY_SCALE);
+            case HIDDEN -> baseWidth;
+            case REPLACE -> rubyWidth;
         };
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || this.getClass() != o.getClass()) return false;
+        if (this == o) return true;
         RubyText other = (RubyText) o;
-        return Objects.equals(this.text, other.text()) && Objects.equals(this.ruby, other.ruby());
+        return Objects.equals(this.text(), other.text()) && Objects.equals(this.ruby(), other.ruby()) &&
+            Objects.equals(this.style(), other.style());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.text, this.ruby);
+        return Objects.hash(this.text(), this.ruby(), this.style());
     }
 
     private void drawRubyPair(
@@ -91,30 +87,31 @@ public record RubyText(String text, String ruby, Style style) {
         float yText,
         float yRuby,
         float width,
-        TextDrawer drawer,
-        TextHandler handler,
+        TextDrawer textDrawer,
+        TextHandler textHandler,
         Matrix4f matrix
     ) {
-        final var style = ((IRubyStyle) this.style).rubi$removeRuby();
-
-        drawer.drawSpacedApart(
-            OrderedText.styledForwardsVisitedString(this.text, style),
+        textDrawer.drawSpacedApart(
+            OrderedText.styledForwardsVisitedString(this.text(), this.style()),
             x,
             yText,
             RubyText.TEXT_SCALE,
             width,
             matrix,
-            handler
+            textHandler
         );
 
-        drawer.drawSpacedApart(
-            OrderedText.styledForwardsVisitedString(this.ruby, style.withUnderline(false).withStrikethrough(false)),
+        textDrawer.drawSpacedApart(
+            OrderedText.styledForwardsVisitedString(
+                this.ruby(),
+                this.style().withUnderline(false).withStrikethrough(false)
+            ),
             x,
             yRuby,
             RubyText.RUBY_SCALE,
             width,
             matrix,
-            handler
+            textHandler
         );
     }
 
@@ -123,9 +120,9 @@ public record RubyText(String text, String ruby, Style style) {
         float y,
         float width,
         Matrix4f matrix,
-        TextHandler handler,
+        TextHandler textHandler,
         int fontHeight,
-        TextDrawer drawer
+        TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float rubyHeight = fontHeight * RubyText.RUBY_SCALE;
@@ -133,7 +130,7 @@ public record RubyText(String text, String ruby, Style style) {
         float yBody = y + (fontHeight - textHeight);
         float yAbove = yBody - rubyHeight + fontHeight * RubyText.RUBY_OVERLAP;
 
-        this.drawRubyPair(x, yBody, yAbove, width, drawer, handler, matrix);
+        this.drawRubyPair(x, yBody, yAbove, width, textDrawer, textHandler, matrix);
     }
 
     public void drawBelow(
@@ -141,21 +138,21 @@ public record RubyText(String text, String ruby, Style style) {
         float y,
         float width,
         Matrix4f matrix,
-        TextHandler handler,
+        TextHandler textHandler,
         int fontHeight,
-        TextDrawer drawer
+        TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float yBelow = y + textHeight - fontHeight * RubyText.RUBY_OVERLAP;
 
-        this.drawRubyPair(x, y, yBelow, width, drawer, handler, matrix);
+        this.drawRubyPair(x, y, yBelow, width, textDrawer, textHandler, matrix);
     }
 
-    public void drawReplace(float x, float y, Matrix4f matrix, TextDrawer drawer) {
-        drawer.draw(OrderedText.styledForwardsVisitedString(this.ruby, this.style), x, y, matrix);
+    public void drawReplace(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+        textDrawer.draw(OrderedText.styledForwardsVisitedString(this.ruby(), this.style), x, y, matrix);
     }
 
-    public void drawHidden(float x, float y, Matrix4f matrix, TextDrawer drawer) {
-        drawer.draw(OrderedText.styledForwardsVisitedString(this.text, this.style), x, y, matrix);
+    public void drawHidden(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+        textDrawer.draw(OrderedText.styledForwardsVisitedString(this.text(), this.style), x, y, matrix);
     }
 }
