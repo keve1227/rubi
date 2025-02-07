@@ -2,42 +2,37 @@ package com.kevinsundqvistnorlen.rubi;
 
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Style;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.joml.Matrix4f;
 
+import java.util.Optional;
+
 @FunctionalInterface
 public interface TextDrawer {
-    static int draw(
+    static float draw(
         OrderedText text, float x, float y, Matrix4f matrix, TextHandler handler, int fontHeight, TextDrawer drawer
     ) {
-        final var advance = new MutableFloat(x);
-        text.accept((index, style, codePoint) -> {
-            IRubyStyle
-                .getRuby(style)
-                .ifPresentOrElse(
-                    (rubyText) ->
-                        advance.add(rubyText.draw(
-                            advance.getValue(),
-                            y,
-                            matrix,
-                            handler,
-                            fontHeight,
-                            drawer
-                        )),
-                    () -> {
-                        var styledChar = OrderedText.styled(codePoint, style);
-                        drawer.draw(
-                            styledChar,
-                            advance.getAndAdd((int) handler.getWidth(styledChar)),
-                            y,
-                            matrix
-                        );
-                    }
-                );
-            return true;
-        });
-
-        return (int) Math.ceil(advance.getValue());
+        var xx = new MutableFloat(x);
+        new OrderedTextStringVisitable(text).visit((style, string) -> {
+            IRubyStyle.getRuby(style).ifPresentOrElse(
+                ruby ->
+                    xx.add(ruby.draw(
+                        xx.getValue(),
+                        y,
+                        matrix,
+                        handler,
+                        fontHeight,
+                        drawer
+                    )),
+                () -> {
+                    var orderedText = OrderedText.styledForwardsVisitedString(string, style);
+                    drawer.draw(orderedText, xx.getAndAdd(handler.getWidth(orderedText)), y, matrix);
+                }
+            );
+            return Optional.empty();
+        }, Style.EMPTY);
+        return xx.getValue();
     }
 
     void draw(OrderedText text, float x, float y, Matrix4f matrix);

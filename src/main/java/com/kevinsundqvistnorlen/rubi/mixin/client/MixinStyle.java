@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @Mixin(Style.class)
 public abstract class MixinStyle implements IRubyStyle {
@@ -46,26 +45,11 @@ public abstract class MixinStyle implements IRubyStyle {
     }
 
     @Shadow
-    private static Style of(
-        Optional<TextColor> color,
-        Optional<Boolean> bold,
-        Optional<Boolean> italic,
-        Optional<Boolean> underlined,
-        Optional<Boolean> strikethrough,
-        Optional<Boolean> obfuscated,
-        Optional<ClickEvent> clickEvent,
-        Optional<HoverEvent> hoverEvent,
-        Optional<String> insertion,
-        Optional<Identifier> font
-    ) {
-        return Style.EMPTY;
-    }
-
-    @Shadow
     public abstract boolean equals(Object o);
 
     @Override
     public Style rubi$withRuby(String word, String ruby) {
+        var rubyText = new RubyText(word, ruby, (Style) (Object) this);
         var result = MixinStyle.invokeConstructor(
             this.color,
             this.bold,
@@ -78,7 +62,8 @@ public abstract class MixinStyle implements IRubyStyle {
             this.insertion,
             this.font
         );
-        ((MixinStyle) (Object) result).setRuby(new RubyText(word, ruby, result));
+        //noinspection DataFlowIssue
+        ((MixinStyle) (Object) result).setRuby(rubyText);
         return result;
     }
 
@@ -90,22 +75,6 @@ public abstract class MixinStyle implements IRubyStyle {
     @Unique
     private void setRuby(@Nullable RubyText ruby) {
         this.ruby = ruby;
-    }
-
-    @Override
-    public Style rubi$removeRuby() {
-        return MixinStyle.of(
-            Optional.ofNullable(this.color),
-            Optional.ofNullable(this.bold),
-            Optional.ofNullable(this.italic),
-            Optional.ofNullable(this.underlined),
-            Optional.ofNullable(this.strikethrough),
-            Optional.ofNullable(this.obfuscated),
-            Optional.ofNullable(this.clickEvent),
-            Optional.ofNullable(this.hoverEvent),
-            Optional.ofNullable(this.insertion),
-            Optional.ofNullable(this.font)
-        );
     }
 
     @Inject(method = "withParent", at = @At("RETURN"))

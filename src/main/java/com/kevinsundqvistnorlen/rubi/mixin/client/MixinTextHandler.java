@@ -1,63 +1,70 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
 
 import com.kevinsundqvistnorlen.rubi.IRubyStyle;
-import com.kevinsundqvistnorlen.rubi.Utils;
-import com.kevinsundqvistnorlen.rubi.option.ITextHandler;
+import com.kevinsundqvistnorlen.rubi.OrderedTextStringVisitable;
 import net.minecraft.client.font.TextHandler;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.StringVisitable;
+import net.minecraft.text.*;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(TextHandler.class)
-public abstract class MixinTextHandler implements ITextHandler {
-    @Shadow @Final TextHandler.WidthRetriever widthRetriever;
-    @Unique private volatile boolean getWidthMutex = false;
+import java.util.Optional;
 
-    @ModifyVariable(method = "<init>", argsOnly = true, at = @At("LOAD"))
-    private static TextHandler.WidthRetriever modifyWidthRetrieverConstructor(
+@Mixin(TextHandler.class)
+public abstract class MixinTextHandler {
+    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
+
+    @ModifyVariable(
+        method = "<init>",
+        argsOnly = true,
+        at = @At(
+            value = "FIELD",
+            target = "Lnet/minecraft/client/font/TextHandler;" +
+                "widthRetriever:Lnet/minecraft/client/font/TextHandler$WidthRetriever;"
+        )
+    )
+    private TextHandler.WidthRetriever modifyWidthRetrieverConstructor(
         TextHandler.WidthRetriever widthRetriever
     ) {
         return (codePoint, style) -> IRubyStyle
             .getRuby(style)
-            .map((rubyText -> rubyText.getWidth(widthRetriever)))
+            .map((rubyText -> rubyText.getWidth((TextHandler) (Object) this)))
             .orElseGet(() -> widthRetriever.getWidth(codePoint, style));
     }
 
     @Shadow
-    public float getWidth(OrderedText text) {
-        return 0f;
-    }
+    public abstract float getWidth(StringVisitable text);
 
     @Inject(
-        method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true, order = 900
+        method = "getWidth(Lnet/minecraft/text/StringVisitable;)F",
+        at = @At("HEAD"),
+        cancellable = true,
+        order = 900
     )
-    public void injectGetWidth(String text, CallbackInfoReturnable<Float> info) {
-        this.onGetWidthOrderedText(Utils.orderedFrom(text), info);
-    }
+    public void onGetWidth(StringVisitable text, CallbackInfoReturnable<Float> cir) {
+        if (this.recursionGuard.get()) return;
+        this.recursionGuard.set(true);
 
-    @Inject(
-        method = "getWidth(Lnet/minecraft/text/StringVisitable;)F", at = @At("HEAD"), cancellable = true, order = 900
-    )
-    public void injectGetWidth(StringVisitable text, CallbackInfoReturnable<Float> info) {
-        this.onGetWidthOrderedText(Utils.orderedFrom(text), info);
-    }
-
-    @Inject(
-        method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true, order = 900
-    )
-    private void onGetWidthOrderedText(OrderedText text, CallbackInfoReturnable<Float> cir) {
-        if (!this.getWidthMutex) {
-            this.getWidthMutex = true;
-            MutableFloat width = new MutableFloat();
-            text.accept((index, style, codePoint) -> {
-                width.add(this.widthRetriever.getWidth(codePoint, style));
-                return true;
-            });
+        try {
+            var width = new MutableFloat();
+            text.visit((style, string) -> {
+                width.add(
+                    IRubyStyle
+                        .getRuby(style)
+                        .map(ruby -> ruby.getWidth((TextHandler) (Object) this))
+                        .orElseGet(() -> this.getWidth(StringVisitable.styled(string, style)))
+                );
+                return Optional.empty();
+            }, Style.EMPTY);
             cir.setReturnValue(width.floatValue());
-            this.getWidthMutex = false;
+        } finally {
+            this.recursionGuard.set(false);
         }
+    }
+
+    @Inject(method = "getWidth(Lnet/minecraft/text/OrderedText;)F", at = @At("HEAD"), cancellable = true, order = 900)
+    private void onGetWidth(OrderedText text, CallbackInfoReturnable<Float> cir) {
+        this.onGetWidth(new OrderedTextStringVisitable(text), cir);
     }
 }
