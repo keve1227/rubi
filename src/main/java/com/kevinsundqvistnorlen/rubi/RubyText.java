@@ -27,11 +27,7 @@ public record RubyText(String text, String ruby, Style style) {
     }
 
     public float draw(
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextHandler textHandler,
-        int fontHeight,
+        float x, float y, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
         float width = this.getWidth(textHandler);
@@ -55,10 +51,8 @@ public record RubyText(String text, String ruby, Style style) {
         }
 
         if (mode != RubyRenderMode.HIDDEN) {
-            rubyWidth += textHandler.getWidth(StringVisitable.styled(
-                this.ruby(),
-                this.style().withUnderline(false).withStrikethrough(false)
-            ));
+            rubyWidth += textHandler.getWidth(
+                StringVisitable.styled(this.ruby(), this.style().withUnderline(false).withStrikethrough(false)));
         }
 
         return switch (mode) {
@@ -73,8 +67,8 @@ public record RubyText(String text, String ruby, Style style) {
         if (o == null || this.getClass() != o.getClass()) return false;
         if (this == o) return true;
         RubyText other = (RubyText) o;
-        return Objects.equals(this.text(), other.text()) && Objects.equals(this.ruby(), other.ruby()) &&
-            Objects.equals(this.style(), other.style());
+        return Objects.equals(this.text(), other.text()) && Objects.equals(this.ruby(), other.ruby()) && Objects.equals(
+            this.style(), other.style());
     }
 
     @Override
@@ -83,45 +77,24 @@ public record RubyText(String text, String ruby, Style style) {
     }
 
     private void drawRubyPair(
-        float x,
-        float yText,
-        float yRuby,
-        float width,
-        TextDrawer textDrawer,
-        TextHandler textHandler,
-        Matrix4f matrix
+        float x, float yText, float yRuby, float width, TextDrawer textDrawer,
+        TextHandler textHandler, Matrix4f matrix
     ) {
         textDrawer.drawSpacedApart(
-            OrderedText.styledForwardsVisitedString(this.text(), this.style()),
-            x,
-            yText,
-            RubyText.TEXT_SCALE,
-            width,
-            matrix,
-            textHandler
+            OrderedText.styledForwardsVisitedString(this.text(), this.style()), x, yText, RubyText.TEXT_SCALE, width,
+            matrix, textHandler
         );
 
         textDrawer.drawSpacedApart(
             OrderedText.styledForwardsVisitedString(
                 this.ruby(),
                 this.style().withUnderline(false).withStrikethrough(false)
-            ),
-            x,
-            yRuby,
-            RubyText.RUBY_SCALE,
-            width,
-            matrix,
-            textHandler
+            ), x, yRuby, RubyText.RUBY_SCALE, width, matrix, textHandler
         );
     }
 
     public void drawAbove(
-        float x,
-        float y,
-        float width,
-        Matrix4f matrix,
-        TextHandler textHandler,
-        int fontHeight,
+        float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
@@ -134,12 +107,7 @@ public record RubyText(String text, String ruby, Style style) {
     }
 
     public void drawBelow(
-        float x,
-        float y,
-        float width,
-        Matrix4f matrix,
-        TextHandler textHandler,
-        int fontHeight,
+        float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;

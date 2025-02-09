@@ -26,20 +26,14 @@ public abstract class MixinStyle implements IRubyStyle {
     @Final @Shadow HoverEvent hoverEvent;
     @Final @Shadow String insertion;
     @Final @Shadow Identifier font;
+
     @Unique private @Nullable RubyText ruby;
 
     @Invoker("<init>")
     private static @NotNull Style invokeConstructor(
-        @Nullable TextColor color,
-        @Nullable Boolean bold,
-        @Nullable Boolean italic,
-        @Nullable Boolean underlined,
-        @Nullable Boolean strikethrough,
-        @Nullable Boolean obfuscated,
-        @Nullable ClickEvent clickEvent,
-        @Nullable HoverEvent hoverEvent,
-        @Nullable String insertion,
-        @Nullable Identifier font
+        @Nullable TextColor color, @Nullable Boolean bold, @Nullable Boolean italic, @Nullable Boolean underlined,
+        @Nullable Boolean strikethrough, @Nullable Boolean obfuscated, @Nullable ClickEvent clickEvent,
+        @Nullable HoverEvent hoverEvent, @Nullable String insertion, @Nullable Identifier font
     ) {
         return Style.EMPTY;
     }
@@ -51,16 +45,8 @@ public abstract class MixinStyle implements IRubyStyle {
     public Style rubi$withRuby(String word, String ruby) {
         var rubyText = new RubyText(word, ruby, (Style) (Object) this);
         var result = MixinStyle.invokeConstructor(
-            this.color,
-            this.bold,
-            this.italic,
-            this.underlined,
-            this.strikethrough,
-            this.obfuscated,
-            this.clickEvent,
-            this.hoverEvent,
-            this.insertion,
-            this.font
+            this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent,
+            this.hoverEvent, this.insertion, this.font
         );
         //noinspection DataFlowIssue
         ((MixinStyle) (Object) result).setRuby(rubyText);
