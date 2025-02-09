@@ -9,7 +9,7 @@ public interface IRubyStyle {
         return Optional.ofNullable(((IRubyStyle) style).rubi$getRuby());
     }
 
-    Style rubi$withRuby(String word, String ruby);
+    Style rubi$withRuby(RubyText rubyText);
 
     RubyText rubi$getRuby();
 }
