@@ -5,11 +5,11 @@
     "client": [
         "MixinAccessibilityOptionsScreen",
         "MixinGameOptions",
-        "MixinLineBreakingVisitor",
+        "MixinStringVisitable",
+        "MixinStyle",
         "MixinTextHandler",
         "MixinTextRenderer",
-        "MixinTextVisitFactory",
-        "MixinStringVisitable"
+        "MixinTextVisitFactory"
     ],
     "injectors": {
         "defaultRequire": 1
