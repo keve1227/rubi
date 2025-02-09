@@ -11,27 +11,19 @@ import java.util.Optional;
 @FunctionalInterface
 public interface TextDrawer {
     static float draw(
-        OrderedText text, float x, float y, Matrix4f matrix, TextHandler handler, int fontHeight, TextDrawer drawer
-    ) {
+        OrderedText text, float x, float y, Matrix4f matrix, TextHandler handler, int fontHeight, TextDrawer drawer) {
         var xx = new MutableFloat(x);
-        new OrderedTextStringVisitable(text).visit((style, string) -> {
-            IRubyStyle.getRuby(style).ifPresentOrElse(
-                ruby ->
-                    xx.add(ruby.draw(
-                        xx.getValue(),
-                        y,
-                        matrix,
-                        handler,
-                        fontHeight,
-                        drawer
-                    )),
-                () -> {
-                    var orderedText = OrderedText.styledForwardsVisitedString(string, style);
-                    drawer.draw(orderedText, xx.getAndAdd(handler.getWidth(orderedText)), y, matrix);
-                }
-            );
-            return Optional.empty();
-        }, Style.EMPTY);
+        new OrderedTextStringVisitable(text).visit(
+            (style, string) -> {
+                IRubyStyle.getRuby(style).ifPresentOrElse(
+                    ruby -> xx.add(ruby.draw(xx.getValue(), y, matrix, handler, fontHeight, drawer)), () -> {
+                        var orderedText = OrderedText.styledForwardsVisitedString(string, style);
+                        drawer.draw(orderedText, xx.getAndAdd(handler.getWidth(orderedText)), y, matrix);
+                    }
+                );
+                return Optional.empty();
+            }, Style.EMPTY
+        );
         return xx.getValue();
     }
 
@@ -42,8 +34,7 @@ public interface TextDrawer {
     }
 
     default void drawSpacedApart(
-        OrderedText text, float x, float y, float scale, float boxWidth, Matrix4f matrix, TextHandler handler
-    ) {
+        OrderedText text, float x, float y, float scale, float boxWidth, Matrix4f matrix, TextHandler handler) {
         float width = handler.getWidth(text) * scale;
         float gap = (boxWidth - width) / Utils.lengthOfOrdered(text);
 

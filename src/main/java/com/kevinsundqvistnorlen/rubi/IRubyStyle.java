@@ -10,5 +10,6 @@ public interface IRubyStyle {
     }
 
     Style rubi$withRuby(String word, String ruby);
+
     RubyText rubi$getRuby();
 }

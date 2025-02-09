@@ -12,20 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TextVisitFactory.class)
 public class MixinTextVisitFactory {
     @Inject(
-        method = "visitFormatted(Ljava/lang/String;ILnet/minecraft/text/Style;Lnet/minecraft/text/Style;" +
-            "Lnet/minecraft/text/CharacterVisitor;)Z",
+        method = "visitFormatted(Ljava/lang/String;ILnet/minecraft/text/Style;Lnet/minecraft/text/Style;" + "Lnet" +
+            "/minecraft/text/CharacterVisitor;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Formatting;byCode(C)Lnet/minecraft/util/Formatting;"),
         cancellable = true
     )
     private static void onFormattingCode(
-        String text,
-        int startIndex,
-        Style startingStyle,
-        Style resetStyle,
-        CharacterVisitor visitor,
-        CallbackInfoReturnable<Boolean> cir,
-        @Local(ordinal = 2) Style style,
-        @Local(ordinal = 2) int index,
+        String text, int startIndex, Style startingStyle, Style resetStyle, CharacterVisitor visitor,
+        CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 2) Style style, @Local(ordinal = 2) int index,
         @Local(ordinal = 1) char styleCode
     ) {
         if (styleCode == '^') {
