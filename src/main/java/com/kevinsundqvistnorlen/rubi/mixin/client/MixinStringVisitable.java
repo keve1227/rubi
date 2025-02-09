@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(StringVisitable.class)
 public interface MixinStringVisitable {
     @Inject(method = "getString", at = @At("RETURN"), cancellable = true)
-    default void injectGetString(CallbackInfoReturnable<String> info) {
+    default void onGetString(CallbackInfoReturnable<String> info) {
         info.setReturnValue(RubyText.strip(info.getReturnValue()));
     }
 }

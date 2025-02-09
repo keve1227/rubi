@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameOptions.class)
 public class MixinGameOptions {
     @Inject(method = "accept", at = @At("HEAD"))
-    private void injectAccept(GameOptions.Visitor visitor, CallbackInfo info) {
+    private void onAccept(GameOptions.Visitor visitor, CallbackInfo info) {
         RubyRenderMode.accept(visitor);
     }
 }

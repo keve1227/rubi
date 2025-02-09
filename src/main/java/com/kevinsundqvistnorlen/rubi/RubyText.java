@@ -12,9 +12,9 @@ public record RubyText(String text, String ruby, Style style) {
     public static final Pattern RUBY_PATTERN = Pattern.compile("\\^\\s*(.+?)\\s*\\(\\s*(.+?)\\s*\\)");
     public static final Pattern RUBY_PATTERN_FOR_STRIPPING = Pattern.compile("§" + RUBY_PATTERN.pattern());
 
-    public static final float RUBY_SCALE = 0.5f;
-    public static final float RUBY_OVERLAP = 0.1f;
-    public static final float TEXT_SCALE = 0.8f;
+    private static final float RUBY_SCALE = 0.5f;
+    private static final float RUBY_OVERLAP = 0.1f;
+    private static final float TEXT_SCALE = 0.8f;
 
     public static String strip(String returnValue) {
         StringBuilder sb = new StringBuilder(returnValue.length());
@@ -26,7 +26,7 @@ public record RubyText(String text, String ruby, Style style) {
         return sb.toString();
     }
 
-    public float draw(
+    float draw(
         float x, float y, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
@@ -93,7 +93,7 @@ public record RubyText(String text, String ruby, Style style) {
         );
     }
 
-    public void drawAbove(
+    private void drawAbove(
         float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
@@ -106,7 +106,7 @@ public record RubyText(String text, String ruby, Style style) {
         this.drawRubyPair(x, yBody, yAbove, width, textDrawer, textHandler, matrix);
     }
 
-    public void drawBelow(
+    private void drawBelow(
         float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
         TextDrawer textDrawer
     ) {
@@ -116,11 +116,11 @@ public record RubyText(String text, String ruby, Style style) {
         this.drawRubyPair(x, y, yBelow, width, textDrawer, textHandler, matrix);
     }
 
-    public void drawReplace(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+    private void drawReplace(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
         textDrawer.draw(OrderedText.styledForwardsVisitedString(this.ruby(), this.style), x, y, matrix);
     }
 
-    public void drawHidden(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+    private void drawHidden(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
         textDrawer.draw(OrderedText.styledForwardsVisitedString(this.text(), this.style), x, y, matrix);
     }
 }
