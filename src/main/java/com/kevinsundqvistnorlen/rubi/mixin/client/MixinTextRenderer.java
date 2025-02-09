@@ -60,7 +60,7 @@ public abstract class MixinTextRenderer {
             "/VertexConsumerProvider;" + "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
         at = @At("HEAD"), cancellable = true
     )
-    public void onDraw(
+    private void onDraw(
         OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix,
         VertexConsumerProvider vertexConsumers, TextRenderer.TextLayerType layerType, int backgroundColor, int light,
         CallbackInfoReturnable<Integer> cir
@@ -82,7 +82,7 @@ public abstract class MixinTextRenderer {
     }
 
     @Inject(method = "drawWithOutline", at = @At("HEAD"), cancellable = true)
-    public void onDrawWithOutline(
+    private void onDrawWithOutline(
         OrderedText text, float x, float y, int color, int outlineColor, Matrix4f matrix,
         VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci
     ) {
