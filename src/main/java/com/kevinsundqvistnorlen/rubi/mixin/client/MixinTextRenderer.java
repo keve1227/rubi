@@ -1,25 +1,22 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
 
-import com.kevinsundqvistnorlen.rubi.*;
-import net.minecraft.client.font.*;
+import com.kevinsundqvistnorlen.rubi.TextDrawer;
+import net.minecraft.client.font.TextHandler;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.text.OrderedText;
+import net.minecraft.text.*;
 import org.joml.Math;
-import org.joml.*;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer {
-
-    @Final
-    @Shadow
-    public int fontHeight;
-
-    @Final
-    @Shadow
-    private TextHandler handler;
+    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
+    @Final @Shadow public int fontHeight;
+    @Final @Shadow private TextHandler handler;
 
     @Shadow
     public abstract int draw(
@@ -49,12 +46,12 @@ public abstract class MixinTextRenderer {
 
     @Redirect(
         method = "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
-                     "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                     "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
+                "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+                "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
         )
     )
     public int redirectDraw(
@@ -72,7 +69,7 @@ public abstract class MixinTextRenderer {
         boolean reverse
     ) {
         return this.draw(
-            Utils.orderedFrom(text),
+            visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor),
             x,
             y,
             color,
@@ -87,12 +84,12 @@ public abstract class MixinTextRenderer {
 
     @Inject(
         method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
-                 "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
+            "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
         at = @At("HEAD"),
         cancellable = true
     )
-    public void injectDraw(
+    public void onDraw(
         OrderedText text,
         float x,
         float y,
@@ -103,37 +100,35 @@ public abstract class MixinTextRenderer {
         TextRenderer.TextLayerType layerType,
         int backgroundColor,
         int light,
-        CallbackInfoReturnable<Integer> info
+        CallbackInfoReturnable<Integer> cir
     ) {
-        var parsed = RubyText.cachedParse(text);
+        if (this.recursionGuard.get()) return;
+        this.recursionGuard.set(true);
 
-        if (parsed.hasRuby()) {
-            float advance = parsed.draw(
-                x,
-                y,
-                matrix,
-                this.handler,
-                this.fontHeight,
-                (t, xx, yy, m) -> this.draw(
-                    t,
-                    Math.round(xx),
-                    Math.round(yy),
-                    color,
-                    shadow,
-                    m,
-                    vertexConsumers,
-                    layerType,
-                    backgroundColor,
-                    light
-                )
-            );
-
-            info.setReturnValue((int) Math.ceil(advance));
+        try {
+            x =
+                TextDrawer.draw(text, x, y, matrix, this.handler, this.fontHeight,
+                    (t, xx, yy, m) -> this.draw(
+                        t,
+                        Math.round(xx),
+                        Math.round(yy),
+                        color,
+                        shadow,
+                        m,
+                        vertexConsumers,
+                        layerType,
+                        backgroundColor,
+                        light
+                    )
+                );
+            cir.setReturnValue((int) Math.ceil(x) + (shadow ? 1 : 0));
+        } finally {
+            this.recursionGuard.set(false);
         }
     }
 
     @Inject(method = "drawWithOutline", at = @At("HEAD"), cancellable = true)
-    public void injectDrawWithOutline(
+    public void onDrawWithOutline(
         OrderedText text,
         float x,
         float y,
@@ -142,12 +137,14 @@ public abstract class MixinTextRenderer {
         Matrix4f matrix,
         VertexConsumerProvider vertexConsumers,
         int light,
-        CallbackInfo info
+        CallbackInfo ci
     ) {
-        var parsed = RubyText.cachedParse(text);
+        if (this.recursionGuard.get()) return;
+        this.recursionGuard.set(true);
 
-        if (parsed.hasRuby()) {
-            parsed.draw(
+        try {
+            TextDrawer.draw(
+                text,
                 x,
                 y,
                 matrix,
@@ -155,8 +152,9 @@ public abstract class MixinTextRenderer {
                 this.fontHeight,
                 (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
-
-            info.cancel();
+            ci.cancel();
+        } finally {
+            this.recursionGuard.set(false);
         }
     }
 }
