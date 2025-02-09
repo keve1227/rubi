@@ -30,9 +30,6 @@ public abstract class MixinTextHandler {
     @Shadow
     public abstract float getWidth(StringVisitable text);
 
-    @Unique
-    public abstract float hello();
-
     @Shadow
     public abstract float getWidth(OrderedText text);
 

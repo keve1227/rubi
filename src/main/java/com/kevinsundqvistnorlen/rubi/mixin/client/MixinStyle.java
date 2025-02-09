@@ -42,8 +42,7 @@ public abstract class MixinStyle implements IRubyStyle {
     public abstract boolean equals(Object o);
 
     @Override
-    public Style rubi$withRuby(String word, String ruby) {
-        var rubyText = new RubyText(word, ruby, (Style) (Object) this);
+    public Style rubi$withRuby(RubyText rubyText) {
         var result = MixinStyle.invokeConstructor(
             this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent,
             this.hoverEvent, this.insertion, this.font

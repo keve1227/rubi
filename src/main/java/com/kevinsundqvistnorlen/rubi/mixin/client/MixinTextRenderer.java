@@ -8,17 +8,17 @@ import net.minecraft.text.*;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer {
-    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
-
     @Final @Shadow public int fontHeight;
-
     @Final @Shadow private TextHandler handler;
+
+    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
 
     @Shadow
     public abstract int draw(
@@ -32,33 +32,28 @@ public abstract class MixinTextRenderer {
         VertexConsumerProvider vertexConsumers, int light
     );
 
-    @Redirect(
+    @Inject(
         method =
             "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
-        at = @At(
-            value = "INVOKE",
-            target =
-                "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
-                    "Lnet/minecraft/client/render/VertexConsumerProvider;" + "Lnet/minecraft/client/font" +
-                    "/TextRenderer$TextLayerType;IIZ)I"
-        )
+        at = @At("HEAD"), cancellable = true, order = 900
     )
-    public int redirectDraw(
-        TextRenderer textRenderer, String text, float x, float y, int color, boolean shadow, Matrix4f matrix,
+    private void onDraw(
+        String text, float x, float y, int color, boolean shadow, Matrix4f matrix,
         VertexConsumerProvider vertexConsumers, TextRenderer.TextLayerType layerType, int backgroundColor, int light,
-        boolean reverse
+        CallbackInfoReturnable<Integer> cir
     ) {
-        return this.draw(
+        this.onDraw(
             visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor), x, y, color, shadow, matrix,
-            vertexConsumers, layerType, backgroundColor, light
+            vertexConsumers, layerType, backgroundColor, light, cir
         );
     }
 
     @Inject(
-        method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" + "Lnet/minecraft/client/render" +
-            "/VertexConsumerProvider;" + "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
-        at = @At("HEAD"), cancellable = true
+        method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
+            "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
+        at = @At("HEAD"), cancellable = true, order = 900
     )
     private void onDraw(
         OrderedText text, float x, float y, int color, boolean shadow, Matrix4f matrix,
@@ -70,8 +65,9 @@ public abstract class MixinTextRenderer {
 
         try {
             x = TextDrawer.draw(
-                text, x, y, matrix, this.handler, this.fontHeight, (t, xx, yy, m) -> this.draw(
-                    t, Math.round(xx), Math.round(yy), color, shadow, m, vertexConsumers, layerType, backgroundColor,
+                text, x, y, matrix, this.handler, this.fontHeight,
+                (t, xx, yy, m) -> this.draw(
+                    t, xx, yy, color, shadow, m, vertexConsumers, layerType, backgroundColor,
                     light
                 )
             );
@@ -81,7 +77,7 @@ public abstract class MixinTextRenderer {
         }
     }
 
-    @Inject(method = "drawWithOutline", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "drawWithOutline", at = @At("HEAD"), cancellable = true, order = 900)
     private void onDrawWithOutline(
         OrderedText text, float x, float y, int color, int outlineColor, Matrix4f matrix,
         VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci
