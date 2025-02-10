@@ -15,10 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer {
+    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
+
     @Final @Shadow public int fontHeight;
     @Final @Shadow private TextHandler handler;
-
-    @Unique private final ThreadLocal<Boolean> recursionGuard = ThreadLocal.withInitial(() -> false);
 
     @Shadow
     public abstract int draw(
