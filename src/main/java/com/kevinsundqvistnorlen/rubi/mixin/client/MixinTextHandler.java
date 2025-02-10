@@ -28,9 +28,6 @@ public abstract class MixinTextHandler {
     }
 
     @Shadow
-    public abstract float getWidth(StringVisitable text);
-
-    @Shadow
     public abstract float getWidth(OrderedText text);
 
     @Inject(method = "getWidth(Ljava/lang/String;)F", at = @At("HEAD"), cancellable = true, order = 900)
