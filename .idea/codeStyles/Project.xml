@@ -14,6 +14,9 @@
       <option name="RPAREN_ON_NEW_LINE_IN_RECORD_HEADER" value="true" />
       <option name="ALIGN_MULTILINE_DECONSTRUCTION_LIST_COMPONENTS" value="false" />
     </JavaCodeStyleSettings>
+    <Properties>
+      <option name="KEEP_BLANK_LINES" value="true" />
+    </Properties>
     <editorconfig>
       <option name="ENABLED" value="false" />
     </editorconfig>
