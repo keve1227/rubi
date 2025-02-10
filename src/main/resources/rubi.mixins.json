@@ -10,7 +10,8 @@
         "MixinStyle",
         "MixinTextHandler",
         "MixinTextRenderer",
-        "MixinTextVisitFactory"
+        "MixinTextVisitFactory",
+        "MixinTextWidget"
     ],
     "injectors": {
         "defaultRequire": 1
