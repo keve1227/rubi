@@ -11,10 +11,13 @@
 
 # idea
 
-/.idea
+/.idea/*
+!/.idea/codeStyles
+!/.idea/inspectionProfiles
 *.iml
 *.ipr
 *.iws
+*~
 
 # vscode
 
