@@ -1,166 +1,103 @@
 package com.kevinsundqvistnorlen.rubi;
 
-import com.google.common.collect.ImmutableList;
 import com.kevinsundqvistnorlen.rubi.option.RubyRenderMode;
 import net.minecraft.client.font.TextHandler;
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Style;
-import org.apache.commons.lang3.mutable.MutableLong;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.text.*;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
-public record RubyText(OrderedText text, OrderedText ruby) implements OrderedText {
+public record RubyText(OrderedText text, OrderedText ruby) {
+    public static final Pattern RUBY_PATTERN = Pattern.compile("§\\^\\s*(.+?)\\s*\\(\\s*(.+?)\\s*\\)");
 
-    public static final Pattern RUBY_PATTERN = Pattern.compile("\ue9c0([^\ue9c1]+)\ue9c1([^\ue9c2]+)\ue9c2");
+    private static final float RUBY_SCALE = 0.5f;
+    private static final float RUBY_OVERLAP = 0.1f;
+    private static final float TEXT_SCALE = 0.8f;
 
-    public static final float RUBY_SCALE = 0.5f;
-    public static final float RUBY_OVERLAP = 0.1f;
-    public static final float TEXT_SCALE = 0.8f;
+    public static String strip(String returnValue) {
+        StringBuilder sb = new StringBuilder(returnValue.length());
 
-    private static final ConcurrentHashMap<OrderedTextKey, RubyParseResult> CACHE = new ConcurrentHashMap<>();
-    private static final int CACHE_MAX_SIZE = 1_000_000;
-
-    public static RubyParseResult cachedParse(OrderedText text) {
-        if (text.getClass().equals(RubyText.class)) {
-            return new RubyParseResult(text);
-        }
-
-        try {
-            return Optional.ofNullable(CACHE.computeIfAbsent(new OrderedTextKey(text), RubyText::internalParse))
-                .orElseGet(() -> new RubyParseResult(text));
-        } finally {
-            while (CACHE.size() >= CACHE_MAX_SIZE) {
-                CACHE.remove(CACHE.keySet().stream().findAny().get());
-            }
-        }
-    }
-
-    private static @Nullable RubyText.RubyParseResult internalParse(OrderedText text) {
-        if (text.getClass().equals(RubyText.class)) {
-            return new RubyParseResult(text);
-        }
-
-        StringBuilder builder = new StringBuilder();
-        List<Style> styles = new ArrayList<>();
-
-        text.accept((index, style, codePoint) -> {
-            for (char c : Character.toChars(codePoint)) {
-                builder.append(c);
-                styles.add(style);
-            }
-
-            return true;
-        });
-
-        // A text with less than 4 characters can't possibly contain ruby.
-        if (builder.length() < 4) return null; // null means a no-cache result.
-
-        List<OrderedText> result = new ArrayList<>();
-
-        var matcher = RUBY_PATTERN.matcher(builder);
-        int last = 0;
-
+        var matcher = RUBY_PATTERN.matcher(returnValue);
         while (matcher.find()) {
-            var start = matcher.start();
-            if (start > last) {
-                result.add(Utils.orderedFrom(builder.subSequence(last, start), styles.subList(last, start)));
+            if (RubyRenderMode.getOption().getValue() == RubyRenderMode.REPLACE) {
+                matcher.appendReplacement(sb, matcher.group(2));
+            } else {
+                matcher.appendReplacement(sb, matcher.group(1));
             }
-
-            var body = Utils.orderedFrom(matcher.group(1), styles.subList(matcher.start(1), matcher.end(1)));
-            var ruby = Utils.orderedFrom(matcher.group(2), styles.subList(matcher.start(2), matcher.end(2)));
-            result.add(new RubyText(body, ruby));
-
-            last = matcher.end();
         }
 
-        if (result.isEmpty()) {
-            return new RubyParseResult(text);
-        }
-
-        if (last < builder.length()) {
-            result.add(Utils.orderedFrom(
-                builder.subSequence(last, builder.length()),
-                styles.subList(last, builder.length())
-            ));
-        }
-
-        return new RubyParseResult(result);
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
-    public static String strip(String text) {
-        return Utils.charsFromOrdered(RubyText.cachedParse(Utils.orderedFrom(text))).toString();
+    public static @NotNull RubyText fromFormatted(String word, String ruby, Style style) {
+        var formattedWord = OrderedText.of(v -> TextVisitFactory.visitFormatted(word, 0, style, style, v));
+        var formattedRuby = OrderedText.of(v -> TextVisitFactory.visitFormatted(ruby, 0, style, style, v));
+        formattedRuby = Utils.transformStyle(formattedRuby, s -> s.withUnderline(false).withStrikethrough(false));
+        return new RubyText(formattedWord, formattedRuby);
     }
 
-    public float getWidth(TextHandler handler) {
-        return Math.max(
-            handler.getWidth(this.text()) * RubyText.TEXT_SCALE,
-            handler.getWidth(this.ruby()) * RubyText.RUBY_SCALE
-        );
-    }
-
-    public float draw(
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextHandler handler,
-        int fontHeight,
-        TextDrawer drawer
+    float draw(
+        float x, float y, Matrix4f matrix, TextHandler textHandler, int fontHeight,
+        TextDrawer textDrawer
     ) {
-        float width = handler.getWidth(this);
+        float width = this.getWidth(textHandler);
 
         switch (RubyRenderMode.getOption().getValue()) {
-            case ABOVE -> this.drawAbove(x, y, width, matrix, handler, fontHeight, drawer);
-            case BELOW -> this.drawBelow(x, y, width, matrix, handler, fontHeight, drawer);
-            case REPLACE -> this.drawReplace(x, y, matrix, drawer);
-            case HIDDEN -> this.drawHidden(x, y, matrix, drawer);
+            case ABOVE -> this.drawAbove(x, y, width, matrix, textHandler, fontHeight, textDrawer);
+            case BELOW -> this.drawBelow(x, y, width, matrix, textHandler, fontHeight, textDrawer);
+            case REPLACE -> this.drawReplace(x, y, matrix, textDrawer);
+            case HIDDEN -> this.drawHidden(x, y, matrix, textDrawer);
         }
 
         return width;
     }
 
-    private void drawRubyPair(
-        float x,
-        float yText,
-        float yRuby,
-        float width,
-        TextDrawer drawer,
-        TextHandler handler,
-        Matrix4f matrix
-    ) {
-        drawer.drawSpacedApart(
-            this.text(),
-            x,
-            yText,
-            RubyText.TEXT_SCALE,
-            width,
-            matrix,
-            handler
-        );
+    public float getWidth(TextHandler textHandler) {
+        var mode = RubyRenderMode.getOption().getValue();
+        float baseWidth = 0f, rubyWidth = 0f;
 
-        drawer.drawSpacedApart(
-            Utils.styleOrdered(this.ruby(), style -> style.withUnderline(false).withBold(true)),
-            x,
-            yRuby,
-            RubyText.RUBY_SCALE,
-            width,
-            matrix,
-            handler
-        );
+        if (mode != RubyRenderMode.REPLACE) {
+            baseWidth += textHandler.getWidth(this.text());
+        }
+
+        if (mode != RubyRenderMode.HIDDEN) {
+            rubyWidth += textHandler.getWidth(this.ruby());
+        }
+
+        return switch (mode) {
+            case ABOVE, BELOW -> Math.max(baseWidth * RubyText.TEXT_SCALE, rubyWidth * RubyText.RUBY_SCALE);
+            case HIDDEN -> baseWidth;
+            case REPLACE -> rubyWidth;
+        };
     }
 
-    public void drawAbove(
-        float x,
-        float y,
-        float width,
-        Matrix4f matrix,
-        TextHandler handler,
-        int fontHeight,
-        TextDrawer drawer
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || this.getClass() != o.getClass()) return false;
+        if (this == o) return true;
+        RubyText other = (RubyText) o;
+        return Objects.equals(this.text(), other.text()) && Objects.equals(this.ruby(), other.ruby());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.text(), this.ruby());
+    }
+
+    private void drawRubyPair(
+        float x, float yText, float yRuby, float width, TextDrawer textDrawer,
+        TextHandler textHandler, Matrix4f matrix
+    ) {
+        textDrawer.drawSpacedApart(this.text(), x, yText, RubyText.TEXT_SCALE, width, matrix, textHandler);
+        textDrawer.drawSpacedApart(this.ruby(), x, yRuby, RubyText.RUBY_SCALE, width, matrix, textHandler);
+    }
+
+    private void drawAbove(
+        float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
+        TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float rubyHeight = fontHeight * RubyText.RUBY_SCALE;
@@ -168,130 +105,24 @@ public record RubyText(OrderedText text, OrderedText ruby) implements OrderedTex
         float yBody = y + (fontHeight - textHeight);
         float yAbove = yBody - rubyHeight + fontHeight * RubyText.RUBY_OVERLAP;
 
-        this.drawRubyPair(x, yBody, yAbove, width, drawer, handler, matrix);
+        this.drawRubyPair(x, yBody, yAbove, width, textDrawer, textHandler, matrix);
     }
 
-    public void drawBelow(
-        float x,
-        float y,
-        float width,
-        Matrix4f matrix,
-        TextHandler handler,
-        int fontHeight,
-        TextDrawer drawer
+    private void drawBelow(
+        float x, float y, float width, Matrix4f matrix, TextHandler textHandler, int fontHeight,
+        TextDrawer textDrawer
     ) {
         float textHeight = fontHeight * RubyText.TEXT_SCALE;
         float yBelow = y + textHeight - fontHeight * RubyText.RUBY_OVERLAP;
 
-        this.drawRubyPair(x, y, yBelow, width, drawer, handler, matrix);
+        this.drawRubyPair(x, y, yBelow, width, textDrawer, textHandler, matrix);
     }
 
-    public void drawReplace(
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextDrawer drawer
-    ) {
-        drawer.draw(this.ruby(), x, y, matrix);
+    private void drawReplace(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+        textDrawer.draw(this.ruby(), x, y, matrix);
     }
 
-    public void drawHidden(
-        float x,
-        float y,
-        Matrix4f matrix,
-        TextDrawer drawer
-    ) {
-        drawer.draw(this.text(), x, y, matrix);
-    }
-
-    @Override
-    public boolean accept(CharacterVisitor visitor) {
-        if (RubyRenderMode.getOption().getValue() == RubyRenderMode.REPLACE) {
-            return this.ruby().accept(visitor);
-        }
-
-        return this.text().accept(visitor);
-    }
-
-    public record RubyParseResult(List<OrderedText> texts) implements OrderedText {
-
-        public RubyParseResult(OrderedText text) {
-            this(ImmutableList.of(text));
-        }
-
-        public boolean hasRuby() {
-            for (final var text : this.texts()) {
-                if (text.getClass() == RubyText.class) return true;
-            }
-
-            return false;
-        }
-
-        public float draw(
-            float x,
-            float y,
-            Matrix4f matrix,
-            TextHandler handler,
-            int fontHeight,
-            TextDrawer drawer
-        ) {
-            float advance = x;
-
-            for (final var text : this.texts()) {
-                if (text.getClass() == RubyText.class) {
-                    advance += ((RubyText) text).draw(advance, y, matrix, handler, fontHeight, drawer);
-                } else {
-                    drawer.draw(text, advance, y, matrix);
-                    advance += handler.getWidth(text);
-                }
-            }
-
-            return advance;
-        }
-
-        @Override
-        public boolean accept(CharacterVisitor visitor) {
-            return OrderedText.concat(this.texts()).accept(visitor);
-        }
-    }
-
-    private record OrderedTextKey(OrderedText text) implements OrderedText {
-        private static final long FNV_OFFSET_BASIS = -3750763034362895579L;
-        private static final long FNV_PRIME = 1099511628211L;
-
-        public long longHashCode() {
-            var hash = new MutableLong(OrderedTextKey.FNV_OFFSET_BASIS);
-
-            this.accept((index, style, codePoint) -> {
-                long h = hash.longValue();
-                h *= OrderedTextKey.FNV_PRIME;
-                h ^= codePoint;
-                h *= OrderedTextKey.FNV_PRIME;
-                h ^= style.hashCode();
-                hash.setValue(h);
-                return true;
-            });
-
-            return hash.longValue();
-        }
-
-        @Override
-        public boolean accept(CharacterVisitor visitor) {
-            return this.text.accept(visitor);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof OrderedTextKey other) {
-                return other.longHashCode() == this.longHashCode();
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Long.hashCode(this.longHashCode());
-        }
+    private void drawHidden(float x, float y, Matrix4f matrix, TextDrawer textDrawer) {
+        textDrawer.draw(this.text(), x, y, matrix);
     }
 }
