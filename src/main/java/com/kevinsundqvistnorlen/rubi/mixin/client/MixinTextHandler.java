@@ -22,7 +22,7 @@ public abstract class MixinTextHandler {
         @Local(argsOnly = true) LocalRef<TextHandler.WidthRetriever> localWidthRetriever
     ) {
         localWidthRetriever.set((codePoint, style) -> IRubyStyle
-            .getRuby(style)
+            .getRuby(style, codePoint)
             .map(rubyText -> rubyText.getWidth((TextHandler) (Object) this))
             .orElseGet(() -> widthRetriever.getWidth(codePoint, style)));
     }
@@ -52,7 +52,7 @@ public abstract class MixinTextHandler {
             text.accept((index, style, codePoint) -> {
                 width.add(
                     IRubyStyle
-                        .getRuby(style)
+                        .getRuby(style, codePoint)
                         .map(ruby -> ruby.getWidth((TextHandler) (Object) this))
                         .orElseGet(() -> this.getWidth(OrderedText.styled(codePoint, style)))
                 );

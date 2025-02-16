@@ -9,6 +9,11 @@ public interface IRubyStyle {
         return Optional.ofNullable(((IRubyStyle) style).rubi$getRuby());
     }
 
+    static Optional<RubyText> getRuby(Style style, int codePoint) {
+        if (codePoint != '￼') return Optional.empty();
+        return getRuby(style);
+    }
+
     Style rubi$withRuby(RubyText rubyText);
 
     RubyText rubi$getRuby();
