@@ -14,7 +14,7 @@ public interface TextDrawer {
         var xx = new MutableFloat(x);
         text.accept((index, style, codePoint) -> {
             xx.add(IRubyStyle
-                .getRuby(style)
+                .getRuby(style, codePoint)
                 .map(rubyText -> rubyText.draw(xx.getValue(), y, matrix, textHandler, fontHeight, textDrawer))
                 .orElseGet(() -> {
                     var styledChar = OrderedText.styled(codePoint, style);
