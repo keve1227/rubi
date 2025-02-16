@@ -2,9 +2,9 @@ package com.kevinsundqvistnorlen.rubi.option;
 
 import com.kevinsundqvistnorlen.rubi.Utils;
 import com.mojang.serialization.Codec;
-import net.minecraft.client.option.*;
+import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.SimpleOption;
 import net.minecraft.util.TranslatableOption;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.Arrays;
 
@@ -45,17 +45,12 @@ public enum RubyRenderMode implements TranslatableOption {
     private static final class Option {
         static final String TRANSLATION_KEY = "options.rubi.renderMode";
         static final SimpleOption<RubyRenderMode> INSTANCE = new SimpleOption<>(
-            TRANSLATION_KEY,
-            SimpleOption.emptyTooltip(),
-            SimpleOption.enumValueText(),
+            TRANSLATION_KEY, SimpleOption.emptyTooltip(), SimpleOption.enumValueText(),
             new SimpleOption.PotentialValuesBasedCallbacks<>(
                 Arrays.asList(RubyRenderMode.values()),
                 Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
-            ),
-            RubyRenderMode.ABOVE,
-            (value) -> {
-                Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
-            }
+            ), RubyRenderMode.ABOVE,
+            (value) -> Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal())
         );
     }
 }
