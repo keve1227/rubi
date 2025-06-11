@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom' version '1.10-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -38,8 +38,8 @@ processResources {
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
-            "fabricloader": project.loader_version,
-            "minecraft": project.minecraft_range
+                "fabricloader": project.loader_version,
+                "minecraft": project.minecraft_range
     }
 }
 
