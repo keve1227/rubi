@@ -17,6 +17,7 @@ import java.util.Objects;
 @Mixin(Style.class)
 public abstract class MixinStyle implements IRubyStyle {
     @Final @Shadow TextColor color;
+    @Final @Shadow Integer shadowColor;  // New field in 1.21.5
     @Final @Shadow Boolean bold;
     @Final @Shadow Boolean italic;
     @Final @Shadow Boolean underlined;
@@ -31,7 +32,7 @@ public abstract class MixinStyle implements IRubyStyle {
 
     @Invoker("<init>")
     private static @NotNull Style invokeConstructor(
-        @Nullable TextColor color, @Nullable Boolean bold, @Nullable Boolean italic, @Nullable Boolean underlined,
+        @Nullable TextColor color, @Nullable Integer shadowColor, @Nullable Boolean bold, @Nullable Boolean italic, @Nullable Boolean underlined,
         @Nullable Boolean strikethrough, @Nullable Boolean obfuscated, @Nullable ClickEvent clickEvent,
         @Nullable HoverEvent hoverEvent, @Nullable String insertion, @Nullable Identifier font
     ) {
@@ -44,7 +45,7 @@ public abstract class MixinStyle implements IRubyStyle {
     @Override
     public Style rubi$withRuby(RubyText rubyText) {
         var result = MixinStyle.invokeConstructor(
-            this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent,
+            this.color, this.shadowColor, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent,
             this.hoverEvent, this.insertion, this.font
         );
         //noinspection DataFlowIssue

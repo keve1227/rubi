@@ -35,13 +35,13 @@ public abstract class MixinTextRenderer {
     @Inject(
         method =
             "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I",
+                "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
         at = @At("HEAD"), cancellable = true, order = 900
     )
     private void onDraw(
         String text, float x, float y, int color, boolean shadow, Matrix4f matrix,
         VertexConsumerProvider vertexConsumers, TextRenderer.TextLayerType layerType, int backgroundColor, int light,
-        boolean rightToLeft, CallbackInfoReturnable<Integer> cir
+        CallbackInfoReturnable<Integer> cir
     ) {
         this.onDraw(
             visitor -> TextVisitFactory.visitFormatted(text, Style.EMPTY, visitor), x, y, color, shadow, matrix,
@@ -91,6 +91,30 @@ public abstract class MixinTextRenderer {
                 (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
             ci.cancel();
+        } finally {
+            this.recursionGuard.set(false);
+        }
+    }
+
+    @Unique
+    private void onDraw(
+        net.minecraft.text.CharacterVisitor visitor, float x, float y, int color, boolean shadow, Matrix4f matrix,
+        VertexConsumerProvider vertexConsumers, TextRenderer.TextLayerType layerType, int backgroundColor, int light,
+        CallbackInfoReturnable<Integer> cir
+    ) {
+        if (this.recursionGuard.get()) return;
+        this.recursionGuard.set(true);
+
+        try {
+            OrderedText orderedText = OrderedText.of((OrderedText) visitor);
+            x = TextDrawer.draw(
+                orderedText, x, y, matrix, this.handler, this.fontHeight,
+                (t, xx, yy, m) -> this.draw(
+                    t, xx, yy, color, shadow, m, vertexConsumers, layerType, backgroundColor,
+                    light
+                )
+            );
+            cir.setReturnValue((int) Math.ceil(x) + (shadow ? 1 : 0));
         } finally {
             this.recursionGuard.set(false);
         }
